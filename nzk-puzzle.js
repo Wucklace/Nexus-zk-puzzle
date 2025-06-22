@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async () => {
             console.log('[nzk-puzzle.js][Logout] button clicked.');
             try {
-                await fetch('http://localhost:3001/api/logout', {
+                await fetch('${BASE_URL}/api/logout', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -165,7 +165,7 @@ function redirectToLogin() {
 async function verifyAuthentication(currentPage) {
     console.log(`[nzk-puzzle.js][Auth] Attempting to verify authentication for ${provername}.`);
     try {
-        const response = await fetch('http://localhost:3001/api/verify', {
+        const response = await fetch(`${BASE_URL}/api/verify`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -218,9 +218,9 @@ async function verifyAuthentication(currentPage) {
 async function fetchAthScore(provername) {
     if (!provername) return;
     try {
-        const response = await fetch(`http://localhost:3001/api/prover/${provername}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+const response = await fetch(`${BASE_URL}/api/prover/${provername}`, { // Corrected: Using BASE_URL variable
+    headers: { 'Authorization': `Bearer ${token}` }
+});
         const data = await response.json();
         if (data.success) {
             athScore = data.athScore || 0;
@@ -241,7 +241,7 @@ async function fetchAthScore(provername) {
 // Global function to save score (primarily for single prover)
 async function saveScore(score) {
     try {
-        const response = await fetch('http://localhost:3001/api/submit-score', {
+        const response = await fetch(BASE_URL, { // Corrected: Using BASE_URL variable
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -272,7 +272,7 @@ async function updateLeaderboard() {
     if (!singleLeaderboardDiv) return;
 
     try {
-        const response = await fetch('http://localhost:3001/api/leaderboard');
+        const response = await fetch(BASE_URL, ) // Corrected: Using BASE_URL variabl
         const data = await response.json();
 
         if (data.success) {
@@ -938,7 +938,7 @@ function connectToMultiproverServer(mode) {
 
     currentGameMode = mode; // Ensure global mode is set
 
-    socket = io('http://localhost:3001', {
+    socket = io(BASE_URL, { // Corrected: Using BASE_URL variable
         auth: {
             token: token,
             provername: provername

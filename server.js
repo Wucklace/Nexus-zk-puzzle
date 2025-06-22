@@ -15,7 +15,7 @@ const server = http.createServer(app);
 // Configure Socket.IO to allow CORS for client connections
 const io = socketIo(server, {
     cors: {
-        origin: "*", // Adjust this to your client-side URL in production, e.g., "http://localhost:3001"
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
@@ -25,10 +25,10 @@ app.use(express.json());
 app.use(cors());
 
 // Configuration from .env or default fallbacks
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
-const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017/nzkp';
-const PORT = process.env.PORT || 3001;
+const MONGODB_URL = process.env.MONGODB_URL;
+const PORT = process.env.PORT;
 
 console.log(`[Server Config] JWT_SECRET loaded: ${JWT_SECRET ? 'YES' : 'NO'}`);
 console.log(`[Server Config] MONGODB_URL loaded: ${MONGODB_URL ? 'YES' : 'NO'}`);
