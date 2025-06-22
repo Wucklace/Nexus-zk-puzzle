@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nexus zk Puzzle - Multiprover</title>
+    <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg">
+    <link rel="stylesheet" href="style.css" /> <!-- Global styles -->
+    <style>
+        /* Internal CSS for multi.html (Multiprover Mode) */
+        /* Ensure HTML and Body take full viewport height for proper centering */
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: auto; /* Allow scrolling if content overflows */
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        h1 img {
+            height: 1em;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        .screen {
+            display: none; /* Controlled by JavaScript */
+            width: 100%;
+            max-width: 1200px; /* Max width for content */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .lobby-container, .multi-container, .game-over-container { /* Added .lobby-container */
+            background-color: #2e2e2e;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            width: 100%;
+            border: 2px solid #0095ff;
+            animation: fadeIn 0.8s ease-out;
+            box-sizing: border-box; /* Ensure padding and border are included in width */
+            margin-left: auto; /* For horizontal centering */
+            margin-right: auto;
+        }
+        /* Override for lobby-container to make it look like a regular lobby */
+        .lobby-container {
+            max-width: 900px; /* Adjust max-width for lobby view */
+            gap: 0; /* Remove gap set by general rule */
+        }
+        /* Styles specific to .multi-container's internal layout */
+        .multi-container {
+            display: flex; /* Use flexbox for internal layout (for multi-container) */
+            flex-direction: column;
+            gap: 25px; /* Spacing between main sections */
+        }
+
+
+        h2 {
+            color: #f8f8f8;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+        }
+
+        /* Lobby Specific Styles (copied and adapted from versus.html) */
+        .lobby-btn {
+            background-color: #0095ff;
+            color: #f8f8f8;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin: 10px;
+        }
+        .lobby-btn:hover:not(:disabled) { background-color: #007bff; transform: translateY(-2px); }
+        .lobby-btn:active:not(:disabled) { transform: translateY(0); background-color: #0056b3; }
+        .lobby-btn.secondary {
+            background-color: #555;
+            color: white;
+        }
+        .lobby-btn.secondary:hover:not(:disabled) { background-color: #666; }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hidden { display: none; }
+
+        .setting-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ccc;
+        }
+        .setting-group input[type="text"],
+        .setting-group select {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            background-color: #4a4f59;
+            color: #f0f0f0;
+            font-size: 1em;
+            box-sizing: border-box; /* Ensures width includes padding */
+        }
+        #copy-code {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background-color: #28a745; /* Green copy button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #copy-code:hover { background-color: #218838; }
+
+        #prover-list { /* Used for VS lobby; multi-waiting-prover-list is for multi */
+            background-color: #4a4f59;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            min-height: 80px; /* Minimum height for visual consistency */
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        #prover-list .prover-item, #multi-waiting-prover-list .prover-item { /* Unified style for prover items in lobbies */
+            padding: 8px 0;
+            border-bottom: 1px solid #555;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #prover-list .prover-item:last-child, #multi-waiting-prover-list .prover-item:last-child { /* Unified last-child */
+            border-bottom: none;
+        }
+        #prover-list .prover-item .provername, #multi-waiting-prover-list .prover-item .provername { /* Unified provername */
+            font-weight: bold;
+            color: #0095ff; /* Blue for provernames */
+        }
+        #prover-list .prover-item .ready-status, #multi-waiting-prover-list .prover-item .ready-status { /* Unified ready-status */
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        #prover-list .prover-item .ready-status.ready, #multi-waiting-prover-list .prover-item .ready-status.ready { /* Unified ready-status.ready */
+            color: #28a745; /* Green for ready */
+        }
+        /* End Lobby Specific Styles */
+
+        .multi-info-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #3a3a3a; /* Slightly lighter than container */
+            padding: 15px 20px;
+            border-radius: 10px;
+            flex-wrap: wrap; /* Allow wrapping for responsiveness */
+            gap: 15px; /* Space between info items */
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid #444;
+        }
+
+        .multi-info-bar p {
+            margin: 0;
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        .multi-info-bar span {
+            font-weight: bold;
+            color: #0095ff; /* Blue for values */
+        }
+
+        .multi-game-area {
+            display: flex;
+            gap: 25px; /* Space between left panel and grid */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: center;
+        }
+
+        .multi-left-panel {
+            flex: 1;
+            min-width: 300px; /* Minimum width for status/leaderboard panel */
+            background-color: #3a3a3a;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid #444;
+            box-sizing: border-box; /* Ensure padding/border are included in width */
+        }
+
+        .multi-left-panel h3 {
+            color: #0095ff;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        #multi-grid-container {
+            flex: 2; /* Main grid takes more space */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 300px; /* Ensures grid has a minimum size */
+        }
+
+        #multi-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--grid-cols, 15), 25px); /* Same grid size as VS mode for consistency */
+            grid-template-rows: repeat(var(--grid-rows, 15), 25px);
+            gap: 2px;
+            background-color: #2b2b2b;
+            border-radius: 10px;
+            overflow: hidden;
+            width: fit-content; /* Fit content to cells */
+            height: auto;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            border: 2px solid #0095ff;
+            box-shadow: 0 0 20px rgba(0, 149, 255, 0.5);
+        }
+
+        #multi-grid .node {
+            width: 25px;
+            height: 25px;
+            background-color: #444;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #multi-grid .node.active {
+            background-color: #0095ff;
+            border-color: #0095ff;
+        }
+
+        .multi-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px; /* Space between buttons */
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Removed multi-prove-btn and multi-clear-btn styles as they are removed from HTML */
+
+        #multi-leave-btn {
+            background-color: #555;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            flex: 1; /* Allows buttons to share space */
+            min-width: 160px; /* Minimum width for buttons */
+        }
+        #multi-leave-btn:hover:not(:disabled) { background-color: #666; transform: translateY(-2px); }
+        #multi-leave-btn:active:not(:disabled) { transform: translateY(0); background-color: #444; }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .styles-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            min-height: 60px; /* Ensure space for styles */
+        }
+        .styles-preview .style-shape {
+            box-shadow: none; /* Remove extra shadow */
+            border: 1px solid #555;
+        }
+        .styles-preview .style-node.active {
+            background-color: #0095ff;
+        }
+        .styles-preview .style-name {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+
+        #multi-prover-list { /* Changed from #multi-player-list */
+            max-height: 250px; /* Limit height of scoreboard */
+            overflow-y: auto; /* Enable scrolling */
+            background-color: #4a4a4a; /* Darker background for list */
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+            border: 1px solid #555;
+        }
+        #multi-prover-list .prover-score-item { /* Changed from .player-score-item */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+            border-bottom: 1px solid #555;
+            color: #f8f8f8;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        #multi-prover-list .prover-score-item:last-child { /* Changed from .player-score-item:last-child */
+            border-bottom: none;
+        }
+        #multi-prover-list .prover-score-item.current-prover { /* Changed from .current-player */
+            background-color: #0056b3; /* Highlight current prover */
+            border-radius: 5px;
+        }
+        #multi-prover-list .prover-score-item .prover-name { /* Changed from .player-name */
+            font-weight: bold;
+            color: #0095ff;
+        }
+        #multi-prover-list .prover-score-item .prover-score { /* Changed from .player-score */
+            font-weight: bold;
+            color: #28a745; /* Green for score */
+        }
+        #multi-prover-list .prover-score-item .rank-emoji {
+            margin-right: 5px;
+        }
+
+
+        /* Game Over Screen (reused from global style.css concept) */
+        .game-over-container {
+            max-width: 600px;
+        }
+        #multi-final-results {
+            font-size: 1.2em;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        #multi-final-results .final-score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+        #multi-final-results .final-score-item:last-child {
+            border-bottom: none;
+        }
+        #multi-final-results .final-name {
+            font-weight: bold;
+            color: #0095ff;
+        }
+        #multi-final-results .final-score {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .multi-game-area {
+                flex-direction: column;
+            }
+            .multi-left-panel {
+                width: 100%;
+                min-width: unset;
+            }
+            #multi-grid-container {
+                width: 100%;
+            }
+        }
+        @media (max-width: 600px) {
+            #multi-grid {
+                grid-template-columns: repeat(var(--grid-cols, 15), 18px); /* Even smaller cells */
+                grid-template-rows: repeat(var(--grid-rows, 15), 18px);
+            }
+            #multi-grid .node {
+                width: 18px;
+                height: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <img src="images/nexus_logo.svg" alt="Nexus Logo" style="height: 1em; vertical-align: middle;">
+        Nexus zk Puzzle
+    </h1>
+
+    <div id="multiprover-lobby-screen" class="screen active">
+        <div class="lobby-container">
+            <h2 id="multi-lobby-title">Multiprover Lobby</h2>
+            
+            <div id="multi-lobby-options">
+                <button id="multi-host-btn" class="lobby-btn">🏠 Host Game</button>
+                <button id="multi-join-btn" class="lobby-btn">🚪 Join Game</button>
+                <button id="multi-back-to-modes-lobby" class="lobby-btn secondary">← Back to Modes</button>
+            </div>
+
+            <div id="multi-host-settings" class="hidden">
+                <h3>Host Settings</h3>
+                <div class="setting-group">
+                    <label for="multi-game-duration">Game Duration:</label>
+                    <select id="multi-game-duration">
+                        <option value="10">10 minutes</option>
+                        <option value="20">20 minutes</option>
+                        <option value="30" selected>30 minutes</option>
+                        <option value="45">45 minutes</option>
+                        <option value="60">60 minutes</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="max-provers">Max Provers:</label>
+                    <select id="max-provers">
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500 (Massive)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="multi-room-code">Room Code:</label>
+                    <input type="text" id="multi-room-code" readonly>
+                    <button id="multi-copy-code">Copy</button>
+                </div>
+                <button id="multi-start-hosting" class="lobby-btn">Start Hosting</button>
+                <button id="multi-cancel-host" class="lobby-btn secondary">Cancel</button>
+            </div>
+
+            <div id="multi-join-settings" class="hidden">
+                <h3>Join Game</h3>
+                <div class="setting-group">
+                    <label for="multi-join-code">Enter Room Code:</label>
+                    <input type="text" id="multi-join-code" placeholder="Enter room code">
+                </div>
+                <button id="multi-join-game" class="lobby-btn">Join Game</button>
+                <button id="multi-cancel-join" class="lobby-btn secondary">Cancel</button>
+            </div>
+
+            <div id="multi-waiting-room" class="hidden">
+                <h3>Waiting Room</h3>
+                <p>Room Code: <span id="multi-current-room-code"></span></p>
+                <p>Provers: <span id="multi-waiting-prover-count">0</span></p>
+                <div id="multi-waiting-prover-list"></div>
+                <p>Your Status: <span id="multi-ready-status-span">NOT READY</span></p>
+                <button id="multi-set-ready-btn" class="lobby-btn" data-ready="false">Ready</button>
+                <div id="multi-host-controls" class="hidden">
+                    <button id="multi-start-game" class="lobby-btn" disabled>Start Game</button>
+                </div>
+                <button id="multi-leave-waiting-room-btn" class="lobby-btn secondary">Leave Room</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="multiprover-game-screen" class="screen">
+        <div class="multi-container">
+            <h2>🌐 Multiprover Battle</h2>
+            <div class="multi-info-bar">
+                <p>👤 Prover: <span id="multi-provername">Loading...</span></p>
+                <p>⏳ Time Left: <span id="multi-timer">0</span>s</p>
+                <p>🏆 Your Score: <span id="multi-score">0</span></p>
+                <p>🟦 Selected nodes: <span id="multi-active-count">0</span></p>
+                <p>🔢 Provers in Room: <span id="multi-prover-count">0</span></p>
+                <p>👑 Leading: <span id="multi-leader">-</span></p>
+                <button id="multi-leave-game-btn" class="lobby-btn secondary">Leave Game</button>
+            </div>
+
+            <div class="multi-game-area">
+                <div class="multi-left-panel">
+                    <h3>🧩 Current Styles to Prove</h3>
+                    <div id="multi-styles-preview" class="styles-preview"></div>
+                    <h3>📊 Live Scoreboard</h3>
+                    <div id="multi-prover-list">
+                        <!-- Prover list will be dynamically updated here -->
+                    </div>
+                </div>
+
+                <div id="multi-grid-container">
+                    <div id="multi-grid"></div>
+                </div>
+            </div>
+
+            <div class="multi-controls">
+                <!-- Manual Prove Style and Clear Selection buttons removed -->
+            </div>
+        </div>
+    </div>
+
+    <div id="multi-game-over-screen" class="screen">
+        <div class="game-over-container">
+            <h2>Multiprover Battle Over!</h2>
+            <div id="multi-final-results"></div>
+            <button id="multi-play-again" class="lobby-btn">Play Again</button>
+            <button id="multi-back-to-modes-gameover" class="lobby-btn secondary">Back to Modes</button>
+        </div>
+    </div>
+
+    <!-- Connection Status (from style.css) -->
+    <div id="connection-status" class="hidden">
+        <span id="status-indicator">🔴</span>
+        <span id="status-text">Connecting...</span>
+    </div>
+
+    <!-- Custom Message Box - Global element -->
+    <div id="custom-message-box"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="nzk-puzzle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("[multi.html] DOMContentLoaded fired.");
+            const token = localStorage.getItem('nzkp-token');
+            const provername = localStorage.getItem('nzkp-provername');
+
+            if (!token || !provername) {
+                console.log("[multi.html] Token/provername missing. nzk-puzzle.js will redirect.");
+                return;
+            }
+
+            // --- UI Element References ---
+            const multiproverLobbyScreen = document.getElementById('multiprover-lobby-screen');
+            const multiproverGameScreen = document.getElementById('multiprover-game-screen');
+            const multiGameOverScreen = document.getElementById('multi-game-over-screen');
+
+            const multiLobbyOptions = document.getElementById('multi-lobby-options');
+            const multiHostSettings = document.getElementById('multi-host-settings');
+            const multiJoinSettings = document.getElementById('multi-join-settings');
+            const multiWaitingRoom = document.getElementById('multi-waiting-room');
+
+            const multiHostBtn = document.getElementById('multi-host-btn');
+            const multiJoinBtn = document.getElementById('multi-join-btn');
+            const multiBackToModesLobbyBtn = document.getElementById('multi-back-to-modes-lobby');
+            // FIX: Declared multiBackToModesGameoverBtn here
+            const multiBackToModesGameoverBtn = document.getElementById('multi-back-to-modes-gameover');
+
+
+            const multiGameDurationSelect = document.getElementById('multi-game-duration');
+            const maxProversSelect = document.getElementById('max-provers');
+            const multiRoomCodeInput = document.getElementById('multi-room-code');
+            const multiCopyCodeBtn = document.getElementById('multi-copy-code');
+            const multiStartHostingBtn = document.getElementById('multi-start-hosting');
+            const multiCancelHostBtn = document.getElementById('multi-cancel-host');
+
+            const multiJoinCodeInput = document.getElementById('multi-join-code');
+            const multiJoinGameBtn = document.getElementById('multi-join-game');
+            const multiCancelJoinBtn = document.getElementById('multi-cancel-join');
+
+            const multiCurrentRoomCodeSpan = document.getElementById('multi-current-room-code');
+            const multiWaitingProverCountSpan = document.getElementById('multi-waiting-prover-count');
+            const multiWaitingProverListDiv = document.getElementById('multi-waiting-prover-list');
+            const multiHostControlsDiv = document.getElementById('multi-host-controls');
+            const multiStartGameBtn = document.getElementById('multi-start-game');
+            const multiLeaveWaitingRoomBtn = document.getElementById('multi-leave-waiting-room-btn');
+            const multiSetReadyBtn = document.getElementById('multi-set-ready-btn');
+            const multiReadyStatusSpan = document.getElementById('multi-ready-status-span');
+
+
+            const multiProvernameSpan = document.getElementById('multi-provername');
+            const multiTimerSpan = document.getElementById('multi-timer');
+            const multiScoreSpan = document.getElementById('multi-score');
+            const multiProverCountSpan = document.getElementById('multi-prover-count');
+            const multiLeaderSpan = document.getElementById('multi-leader');
+            const multiLeaveGameBtn = document.getElementById('multi-leave-game-btn');
+
+            const multiStylesPreviewDiv = document.getElementById('multi-styles-preview');
+            const multiProverListDiv = document.getElementById('multi-prover-list');
+            const multiGridDiv = document.getElementById('multi-grid');
+
+            // Set current prover's name immediately (this also happens in nzk-puzzle.js)
+            if (multiProvernameSpan) multiProvernameSpan.textContent = provername;
+
+            // Expose showScreen and showMultiproverSubScreen globally for nzk-puzzle.js
+            window.showScreen = function(screenElement) {
+                console.log(`[multi.html] showScreen called for: ${screenElement.id}`);
+                document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+                screenElement.classList.add('active');
+            };
+            window.showMultiproverSubScreen = function(subScreenElement) {
+                console.log(`[multi.html] showMultiproverSubScreen called for: ${subScreenElement.id}`);
+                multiLobbyOptions.classList.add('hidden');
+                multiHostSettings.classList.add('hidden');
+                multiJoinSettings.classList.add('hidden');
+                multiWaitingRoom.classList.add('hidden');
+                subScreenElement.classList.remove('hidden');
+            };
+            // Expose a function for nzk-puzzle.js to update the active count in Multiprover UI
+            window.updateMultiproverActiveCount = function(count) {
+                const multiActiveCountEl = document.getElementById('multi-active-count');
+                if (multiActiveCountEl) multiActiveCountEl.innerText = count;
+            };
+
+
+            // --- Lobby UI Event Listeners ---
+            if (multiHostBtn) {
+                console.log("[multi.html] Attaching listener to multi-host-btn.");
+                multiHostBtn.addEventListener('click', () => {
+                    console.log("[multi.html] multi-host-btn clicked.");
+                    window.showMultiproverSubScreen(multiHostSettings);
+                });
+            } else {
+                console.error("[multi.html] multi-host-btn not found.");
+            }
+
+            if (multiJoinBtn) {
+                console.log("[multi.html] Attaching listener to multi-join-btn.");
+                multiJoinBtn.addEventListener('click', () => {
+                    console.log("[multi.html] multi-join-btn clicked.");
+                    window.showMultiproverSubScreen(multiJoinSettings);
+                    if (window.socket && window.socket.connected) {
+                        console.log("[multi.html] Emitting 'get-rooms' from multi-join-btn click.");
+                        window.socket.emit('get-rooms');
+                    } else {
+                        window.showMessageBox('Not connected to game server. Please wait.', 'info');
+                        console.warn("[multi.html] Socket not connected when join button clicked.");
+                    }
+                });
+            } else {
+                console.error("[multi.html] multi-join-btn not found.");
+            }
+
+            if (multiCancelHostBtn) multiCancelHostBtn.addEventListener('click', () => window.showMultiproverSubScreen(multiLobbyOptions));
+            if (multiCancelJoinBtn) multiCancelJoinBtn.addEventListener('click', () => window.showMultiproverSubScreen(multiLobbyOptions));
+
+            if (multiBackToModesLobbyBtn) multiBackToModesLobbyBtn.addEventListener('click', window.backToModes);
+            if (multiBackToModesGameoverBtn) multiBackToModesGameoverBtn.addEventListener('click', window.backToModes);
+
+            if (multiCopyCodeBtn) {
+                multiCopyCodeBtn.addEventListener('click', () => {
+                    multiRoomCodeInput.select();
+                    document.execCommand('copy');
+                    const originalText = multiCopyCodeBtn.textContent;
+                    multiCopyCodeBtn.textContent = 'Copied!';
+                    setTimeout(() => multiCopyCodeBtn.textContent = originalText, 1500);
+                });
+            }
+
+            if (multiStartHostingBtn) {
+                multiStartHostingBtn.addEventListener('click', () => {
+                    console.log("[multi.html] multi-start-hosting-btn clicked.");
+                    const duration = multiGameDurationSelect.value;
+                    const maxProvers = maxProversSelect.value;
+                    window.emitCreateRoom('multiprover', duration, maxProvers);
+                });
+            }
+
+            if (multiJoinGameBtn) {
+                multiJoinGameBtn.addEventListener('click', () => {
+                    console.log("[multi.html] multi-join-game-btn clicked.");
+                    const roomId = multiJoinCodeInput.value.trim();
+                    window.emitJoinRoom(roomId);
+                });
+            }
+
+            if (multiStartGameBtn) multiStartGameBtn.addEventListener('click', window.emitStartGame);
+
+            if (multiLeaveWaitingRoomBtn) multiLeaveWaitingRoomBtn.addEventListener('click', window.emitLeaveRoom);
+            if (multiLeaveGameBtn) multiLeaveGameBtn.addEventListener('click', window.emitLeaveRoom);
+
+            // New: Ready button logic
+            if (multiSetReadyBtn) {
+                multiSetReadyBtn.addEventListener('click', () => {
+                    console.log("[multi.html] multi-set-ready-btn clicked.");
+                    const isReady = multiSetReadyBtn.dataset.ready === 'true';
+                    window.emitToggleReady(!isReady);
+                });
+            }
+
+            // Game over screen "Play Again" button
+            const multiPlayAgainBtn = document.getElementById('multi-play-again');
+            if (multiPlayAgainBtn) {
+                multiPlayAgainBtn.addEventListener('click', () => {
+                    console.log("[multi.html] multi-play-again clicked.");
+                    window.showScreen(multiproverLobbyScreen);
+                    window.showMultiproverSubScreen(multiLobbyOptions);
+                    window.connectSocketForMultiprover();
+                });
+            }
+
+            // Debugging console checks for global functions from nzk-puzzle.js
+            if (typeof window.connectSocketForMultiprover === 'undefined') console.error("DEBUG: connectSocketForMultiprover not found in window.");
+            if (typeof window.emitCreateRoom === 'undefined') console.error("DEBUG: emitCreateRoom not found in window.");
+            if (typeof window.emitJoinRoom === 'undefined') console.error("DEBUG: emitJoinRoom not found in window.");
+            if (typeof window.emitLeaveRoom === 'undefined') console.error("DEBUG: emitLeaveRoom not found in window.");
+            if (typeof window.emitStartGame === 'undefined') console.error("DEBUG: emitStartGame not found in window.");
+            if (typeof window.emitToggleReady === 'undefined') console.error("DEBUG: emitToggleReady not found in window.");
+            if (typeof window.backToModes === 'undefined') console.error("DEBUG: backToModes not found in window.");
+            if (typeof window.showMessageBox === 'undefined') console.error("DEBUG: showMessageBox not found in window.");
+            if (typeof window.updateMultiproverActiveCount === 'undefined') console.error("DEBUG: updateMultiproverActiveCount not found in window.");
+        });
+    </script>
+</body>
+</html>

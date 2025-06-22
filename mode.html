@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nexus zk Puzzle - Select Mode</title>
+    <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg">
+    <link rel="stylesheet" href="style.css" /> <!-- Linking global styles -->
+    <style>
+        /* Internal CSS for mode.html specific layout and elements */
+        /* Ensure HTML and Body take full viewport height for proper centering */
+        html, body {
+            margin: 0; /* Remove default body margins */
+            padding: 0; /* Remove default body padding */
+           /* overflow: auto; Allow scrolling if content overflows */
+        }
+        body {
+            /* Inherits most from style.css, but ensure centering for this specific page */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px; /* Add padding for small screens */
+        }
+
+        h1 {
+            margin-bottom: 10px; /* More space below main title */
+        }
+
+        h1 img {
+            height: 1em;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        .mode-container {
+            background-color: #2e2e2e; /* Darker background */
+            padding: 20px;
+            border-radius: 15px; /* More rounded */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); /* Stronger shadow */
+            text-align: center;
+            max-width: 900px;
+            max-height: 100vh;
+            animation: fadeIn 0.8s ease-out; /* Add a subtle animation */
+            border: 2px solid #0095ff; /* Blue border */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            margin-left: auto; /* Auto margins for horizontal centering if flexbox isn't enough */
+            margin-right: auto;
+        }
+
+        h2 {
+            color: #f8f8f8; /* White heading */
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+        }
+
+        .mode-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid for cards */
+            gap: 30px; /* Larger gap between cards */
+            margin-bottom: 30px;
+        }
+
+        .mode-card {
+            background-color: #3a3a3a; /* Slightly lighter dark for cards */
+            padding: 5px; /* More padding */
+            border-radius: 12px; /* Rounded corners for cards */
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            min-height: 120px; /* Ensure consistent height */
+            border: 1px solid #444; /* Subtle border */
+        }
+
+        .mode-card:hover {
+            transform: translateY(-8px) scale(1.03); /* Lift and slightly enlarge */
+            box-shadow: 0 15px 35px rgba(0, 149, 255, 0.5); /* Blue glow on hover */
+            background-color: #4a4a4a; /* Lighter on hover */
+        }
+
+        .mode-card h3 {
+            color: #0095ff; /* Blue for card titles */
+            margin-top: 0;
+            font-size: 1.8em; /* Larger title */
+            margin-bottom: 15px;
+        }
+
+        .mode-card p {
+            color: #ccc; /* Lighter text for descriptions */
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 5px;
+        }
+
+        .prover-info { /* Changed from .user-info */
+            font-size: 1.2em;
+            color: #aaa;
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 15px; /* Space between elements */
+        }
+
+        .prover-info button { /* Changed from .user-info button */
+            background-color: #dc3545; /* Red for logout */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .prover-info button:hover { /* Changed from .user-info button:hover */
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+            .mode-container {
+                padding: 30px;
+            }
+            .mode-options {
+                grid-template-columns: 1fr; /* Stack cards vertically */
+            }
+            .mode-card {
+                padding: 25px;
+                min-height: unset; /* Allow height to adjust */
+            }
+            .prover-info { /* Changed from .user-info */
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <img src="images/nexus_logo.svg" alt="Nexus Logo" style="height: 1em; vertical-align: middle;">
+        Nexus zk Puzzle
+    </h1>
+
+    <div id="mode-selection" class="screen active">
+        <div class="mode-container">
+            <h2>Choose Game Mode</h2>
+            <div class="mode-options">
+                <!-- Calls selectMode from nzk-puzzle.js -->
+                <div class="mode-card" onclick="window.selectMode('single')">
+                    <h3>🎯 Single Prover</h3>
+                    <p>Practice your skills against time</p>
+                    <p>how many style can you prove in 15sec</p>
+                </div>
+                <div class="mode-card" onclick="window.selectMode('vs')">
+                    <h3>⚔️ VS Mode</h3>
+                    <p>1 vs 1 challenge</p>
+                    <p>Host or join a game</p>
+                </div>
+                <div class="mode-card" onclick="window.selectMode('multiprover')">
+                    <h3>🌐 Multiprover</h3>
+                    <p>3-500 provers</p>
+                    <p>Compete with everyone</p>
+                </div>
+                <div class="prover-info">
+                   <p>👤 <span id="current-prover">Loading...</span> | <button id="logout-btn-mode">Logout</button></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status Indicator - Global element -->
+    <div id="connection-status" class="hidden">
+        <span id="status-indicator">🔴</span>
+        <span id="status-text">Connecting...</span>
+    </div>
+
+    <!-- Custom Message Box - Global element -->
+    <div id="custom-message-box"></div>
+
+    <!-- Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Your core game logic -->
+    <script src="nzk-puzzle.js"></script>
+    <script>
+        // Internal JavaScript for mode.html to connect the UI to nzk-puzzle.js functions
+        document.addEventListener('DOMContentLoaded', function() {
+            // No need for local auth check here, nzk-puzzle.js handles the overall flow.
+
+            // The logout button will be handled by the global listener in nzk-puzzle.js (document.querySelectorAll('[id*="logout-btn"]'))
+            // So, explicit listener here is redundant but harmless if ID is unique.
+            // document.getElementById('logout-btn-mode').addEventListener('click', window.logout); 
+            // Removed direct listener as it's covered by nzk-puzzle.js's global selector.
+
+            // nzk-puzzle.js's verifyAuthentication will populate #current-prover.
+            // If it fails verification, nzk-puzzle.js will handle redirect to login.
+
+            // Debugging checks for global functions from nzk-puzzle.js
+            if (typeof window.selectMode === 'undefined') console.error("selectMode not found. Check nzk-puzzle.js");
+            if (typeof window.logout === 'undefined') console.error("logout not found. Check nzk-puzzle.js");
+            if (typeof window.showScreen === 'undefined') console.error("showScreen not found. Check nzk-puzzle.js");
+            if (typeof window.showMessageBox === 'undefined') console.error("showMessageBox not found. Check nzk-puzzle.js");
+        });
+    </script>
+</body>
+</html>

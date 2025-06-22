@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nexus zk Puzzle - Single Prover</title>
+    <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h1>
+        <img src="images/nexus_logo.svg" alt="Nexus Logo" class="logo">
+        Nexus zk Puzzle
+    </h1>
+
+    <div id="single-prover-screen" class="screen active">
+        <div id="main-container">
+            <div id="game-status">
+                <h2>Single Prover Game</h2>
+                <h3>Game Status</h3>
+                <p>✅ Proved: <span id="success">0</span></p>
+                <p>❌ Failed: <span id="fail">0</span></p>
+                <p>🟦 Selected: <span id="active-count">0</span></p>
+                <h3>🧩 Styles</h3>
+                <div id="styles-preview"></div>
+            </div>
+
+            <div id="grid"></div>
+
+            <div id="game-control">
+                <h3>🎮 Controls</h3>
+                <p>👤 Prover: <span id="prover-name">Loading...</span> | <button id="logout-btn">Logout</button></p>
+                <p>⏳ Time: <span id="timer">90</span>s</p>
+                <p>🧠 Score: <span id="score">0</span></p>
+                <p>📈 ATH: <span id="ath-score">0</span></p>
+                <button id="start-btn">▶️ Start</button>
+                <button id="end-btn" disabled>⏹️ End</button>
+            </div>
+        </div>
+
+        <div id="leaderboard"></div>
+        <div id="final-results" class="hidden"></div>
+    </div>
+
+    <div id="game-over-screen-single" class="screen">
+        <div class="game-over-container">
+            <h2>Single Prover Over!</h2>
+            <div id="single-final-results-display"></div>
+            <button id="play-again-single" class="lobby-btn">Play Again</button>
+            <button id="back-to-modes-single-gameover" class="lobby-btn secondary">Back</button>
+        </div>
+    </div>
+
+    <div id="connection-status" class="hidden">
+        <span id="status-indicator">🔴</span>
+        <span id="status-text">Connecting...</span>
+    </div>
+
+    <div id="custom-message-box"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="nzk-puzzle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('nzkp-token');
+            const provername = localStorage.getItem('nzkp-provername');
+
+            if (!token || !provername) {
+                console.log("[index.html] Token/provername missing. nzk-puzzle.js will redirect.");
+                return;
+            }
+
+            const startBtn = document.getElementById('start-btn');
+            const endBtn = document.getElementById('end-btn');
+            
+            if (startBtn) startBtn.addEventListener('click', window.startGame);
+            if (endBtn) endBtn.addEventListener('click', window.endGame);
+
+            document.getElementById('play-again-single').addEventListener('click', window.playAgainSingleProver);
+            document.getElementById('back-to-modes-single-gameover').addEventListener('click', window.backToModes);
+
+            window.updateLeaderboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus zK Puzzle - Prover Login</title> <!-- Changed title to Prover Login -->
+    <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg">
+
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0095ff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Authentication Container */
+        .auth-container {
+            background: #f8f8f8;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Header Styling */
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h1 {
+            color: #1b1b1e;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .auth-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Tab Navigation */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f8f8;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-button.active {
+            background: #0095ff;
+            color: white;
+        }
+
+        /* Form Styling */
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0095ff;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #0095ff;
+            color: #f8f8f8;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Message Display (Success/Error) */
+        .message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Form Help Text */
+        .form-help {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>
+                <img src="images/nexus_logo.svg" alt="Nexus Logo" style="height: 1em; vertical-align: middle;">
+                Nexus zK 🧩
+            </h1>
+            <p>Prove your puzzle skills!</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="tab-button active" onclick="switchTab('login')">Login</button>
+            <button class="tab-button" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <!-- Login Form -->
+        <form class="auth-form active" id="login-form">
+            <div class="form-group">
+                <label for="login-provername">Prover Name</label>
+                <input type="text" id="login-provername" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button type="submit" class="submit-btn" id="login-btn">Sign In</button>
+        </form>
+
+        <!-- Register Form -->
+        <form class="auth-form" id="register-form">
+            <div class="form-group">
+                <label for="register-provername">Prover Name</label>
+                <input type="text" id="register-provername" required>
+                <div class="form-help">This will be your unique login ID and display name on the leaderboard</div>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" required minlength="6">
+                <div class="form-help">At least 6 characters</div>
+            </div>
+            <button type="submit" class="submit-btn" id="register-btn">Create Account</button>
+        </form>
+    </div>
+
+    <script>
+        /**
+         * Switches between the login and register forms.
+         * @param {string} tab - The ID of the tab to activate ('login' or 'register').
+         */
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            document.getElementById(`${tab}-form`).classList.add('active');
+
+            hideMessage();
+        }
+
+        /**
+         * Displays a message to the prover (success or error).
+         * @param {string} text - The message content.
+         * @param {string} type - The type of message ('success' or 'error').
+         */
+        function showMessage(text, type = 'error') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+        }
+
+        /**
+         * Hides the message display.
+         */
+        function hideMessage() {
+            document.getElementById('message').style.display = 'none';
+        }
+
+        /**
+         * Sets the loading state for a button (disables it and shows a spinner).
+         * @param {string} btnId - The ID of the button element.
+         * @param {boolean} isLoading - True to show loading state, false to hide.
+         */
+        function setLoading(btnId, isLoading) {
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span>Processing...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btnId === 'login-btn' ? 'Sign In' : 'Create Account';
+            }
+        }
+
+        // Login Form Submission Handler
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage();
+            setLoading('login-btn', true);
+
+            const provername = document.getElementById('login-provername').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ provername, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('nzkp-token', data.token);
+                    localStorage.setItem('nzkp-provername', data.provername);
+                    showMessage('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
+                    }, 1500);
+                } else {
+                    showMessage(data.error || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('Login failed. Please try again. Network issue or server error.');
+            } finally {
+                setLoading('login-btn', false);
+            }
+        });
+
+        // Register Form Submission Handler
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage();
+            setLoading('register-btn', true);
+
+            const provername = document.getElementById('register-provername').value;
+            const password = document.getElementById('register-password').value;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ provername, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('nzkp-token', data.token);
+                    localStorage.setItem('nzkp-provername', data.provername);
+                    showMessage('Account created successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
+                    }, 1500);
+                } else {
+                    showMessage(data.error || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('Registration failed. Please try again. Network issue or server error.');
+            } finally {
+                setLoading('register-btn', false);
+            }
+        });
+
+        // Initial Check for Already Logged In Prover
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('nzkp-token');
+            const provername = localStorage.getItem('nzkp-provername');
+
+            if (token && provername) {
+                fetch('http://localhost:3001/api/verify', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
+                    } else {
+                        // If token invalid, clear it
+                        localStorage.removeItem('nzkp-token');
+                        localStorage.removeItem('nzkp-provername');
+                    }
+                })
+                .catch(() => {
+                    // Network error or server unreachable, clear token
+                    localStorage.removeItem('nzkp-token');
+                    localStorage.removeItem('nzkp-provername');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
