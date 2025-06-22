@@ -272,7 +272,7 @@ async function updateLeaderboard() {
     if (!singleLeaderboardDiv) return;
 
     try {
-        const response = await fetch(BASE_URL, ) // Corrected: Using BASE_URL variabl
+        const response = await fetch(`${BASE_URL}/api/leaderboard`); // Corrected: Using BASE_URL variable
         const data = await response.json();
 
         if (data.success) {

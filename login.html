@@ -1,405 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus zK Puzzle - Prover Login</title> <!-- Changed title to Prover Login -->
-    <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nexus zK Puzzle - Prover Login</title>
+  <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    <style>
-        /* General Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #0095ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        /* Body Styling */
-        body {
-            font-family: 'Arial', sans-serif;
-            background: #0095ff;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+    .auth-container {
+      background: #f8f8f8;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+    }
 
-        /* Authentication Container */
-        .auth-container {
-            background: #f8f8f8;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            backdrop-filter: blur(10px);
-        }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
 
-        /* Header Styling */
-        .auth-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+    .auth-header h1 {
+      color: #1b1b1e;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
 
-        .auth-header h1 {
-            color: #1b1b1e;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
+    .auth-header p {
+      color: #666;
+      font-size: 1.1em;
+    }
 
-        .auth-header p {
-            color: #666;
-            font-size: 1.1em;
-        }
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f8f8f8;
+    }
 
-        /* Tab Navigation */
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 30px;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #f8f8f8;
-        }
+    .tab-button {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      color: #666;
+    }
 
-        .tab-button {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            color: #666;
-        }
+    .tab-button.active {
+      background: #0095ff;
+      color: white;
+    }
 
-        .tab-button.active {
-            background: #0095ff;
-            color: white;
-        }
+    .auth-form {
+      display: none;
+    }
 
-        /* Form Styling */
-        .auth-form {
-            display: none;
-        }
+    .auth-form.active {
+      display: block;
+    }
 
-        .auth-form.active {
-            display: block;
-        }
+    .form-group {
+      margin-bottom: 20px;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: bold;
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: bold;
-        }
+    .form-group input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1em;
+      transition: border-color 0.3s ease;
+    }
 
-        .form-group input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
+    .form-group input:focus {
+      outline: none;
+      border-color: #0095ff;
+    }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #0095ff;
-        }
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: #0095ff;
+      color: #f8f8f8;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
 
-        /* Submit Button */
-        .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: #0095ff;
-            color: #f8f8f8;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+    }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
-        }
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
 
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+    .message {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+    }
 
-        /* Message Display (Success/Error) */
-        .message {
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            display: none;
-        }
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
 
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
 
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
 
-        /* Loading Spinner */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Form Help Text */
-        .form-help {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
-        }
-    </style>
+    .form-help {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-header">
-            <h1>
-                <img src="images/nexus_logo.svg" alt="Nexus Logo" style="height: 1em; vertical-align: middle;">
-                Nexus zK 🧩
-            </h1>
-            <p>Prove your puzzle skills!</p>
-        </div>
-
-        <div class="auth-tabs">
-            <button class="tab-button active" onclick="switchTab('login')">Login</button>
-            <button class="tab-button" onclick="switchTab('register')">Register</button>
-        </div>
-
-        <div class="message" id="message"></div>
-
-        <!-- Login Form -->
-        <form class="auth-form active" id="login-form">
-            <div class="form-group">
-                <label for="login-provername">Prover Name</label>
-                <input type="text" id="login-provername" required>
-            </div>
-            <div class="form-group">
-                <label for="login-password">Password</label>
-                <input type="password" id="login-password" required>
-            </div>
-            <button type="submit" class="submit-btn" id="login-btn">Sign In</button>
-        </form>
-
-        <!-- Register Form -->
-        <form class="auth-form" id="register-form">
-            <div class="form-group">
-                <label for="register-provername">Prover Name</label>
-                <input type="text" id="register-provername" required>
-                <div class="form-help">This will be your unique login ID and display name on the leaderboard</div>
-            </div>
-            <div class="form-group">
-                <label for="register-password">Password</label>
-                <input type="password" id="register-password" required minlength="6">
-                <div class="form-help">At least 6 characters</div>
-            </div>
-            <button type="submit" class="submit-btn" id="register-btn">Create Account</button>
-        </form>
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1>
+        <img src="images/nexus_logo.svg" alt="Nexus Logo" style="height: 1em; vertical-align: middle;">
+        Nexus zK 🧩
+      </h1>
+      <p>Prove your puzzle skills!</p>
     </div>
 
-    <script>
-        /**
-         * Switches between the login and register forms.
-         * @param {string} tab - The ID of the tab to activate ('login' or 'register').
-         */
-        // ADDED THIS LINE: Defines BASE_URL for fetch calls within this script
-        const BASE_URL = window.location.origin;
+    <div class="auth-tabs">
+      <button class="tab-button active">Login</button>
+      <button class="tab-button">Register</button>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginTab = document.querySelector('.auth-tabs .tab-button:nth-child(1)'); // More robust selection
-            const registerTab = document.querySelector('.auth-tabs .tab-button:nth-child(2)'); // More robust selection
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const messageContainer = document.getElementById('message'); // Ensure this ID is used consistently
+    <div class="message" id="message"></div>
 
-            // Redefine showMessage and hideMessage as they are local to this script
-            function showMessage(text, type = 'error') {
-                messageContainer.textContent = text;
-                messageContainer.className = `message ${type}`;
-                messageContainer.style.display = 'block';
-            }
+    <!-- Login Form -->
+    <form class="auth-form active" id="login-form">
+      <div class="form-group">
+        <label for="login-provername">Prover Name</label>
+        <input type="text" id="login-provername" required>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required>
+      </div>
+      <button type="submit" class="submit-btn" id="login-btn">Sign In</button>
+    </form>
 
-            function hideMessage() {
-                messageContainer.style.display = 'none';
-            }
+    <!-- Register Form -->
+    <form class="auth-form" id="register-form">
+      <div class="form-group">
+        <label for="register-provername">Prover Name</label>
+        <input type="text" id="register-provername" required>
+        <div class="form-help">This will be your unique login ID and display name on the leaderboard</div>
+      </div>
+      <div class="form-group">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" required minlength="6">
+        <div class="form-help">At least 6 characters</div>
+      </div>
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" required>
+      </div>
+      <button type="submit" class="submit-btn" id="register-btn">Create Account</button>
+    </form>
+  </div>
 
-            function setLoading(btnId, isLoading) {
-                const btn = document.getElementById(btnId);
-                if (isLoading) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="loading"></span>Processing...';
-                } else {
-                    btn.disabled = false;
-                    btn.innerHTML = btnId === 'login-btn' ? 'Sign In' : 'Create Account';
-                }
-            }
+  <script>
+    const BASE_URL = window.location.origin;
 
+    document.addEventListener('DOMContentLoaded', function () {
+      const loginTab = document.querySelector('.auth-tabs .tab-button:nth-child(1)');
+      const registerTab = document.querySelector('.auth-tabs .tab-button:nth-child(2)');
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const messageContainer = document.getElementById('message');
 
-            // Listener for tab buttons (using direct elements now, not onclick attributes)
-            loginTab.addEventListener('click', () => {
-                switchTab('login');
-            });
+      function showMessage(text, type = 'error') {
+        messageContainer.textContent = text;
+        messageContainer.className = `message ${type}`;
+        messageContainer.style.display = 'block';
+      }
 
-            registerTab.addEventListener('click', () => {
-                switchTab('register');
-            });
+      function hideMessage() {
+        messageContainer.style.display = 'none';
+      }
 
-            function switchTab(tab) {
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                document.getElementById(`${tab}-tab`).classList.add('active'); // Use ID for tab buttons
+      function setLoading(btnId, isLoading) {
+        const btn = document.getElementById(btnId);
+        if (isLoading) {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="loading"></span>Processing...';
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = btnId === 'login-btn' ? 'Sign In' : 'Create Account';
+        }
+      }
 
-                document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-                document.getElementById(`${tab}-form`).classList.add('active');
+      function switchTab(tab) {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        if (tab === 'login') loginTab.classList.add('active');
+        else registerTab.classList.add('active');
 
-                hideMessage();
-            }
+        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+        document.getElementById(`${tab}-form`).classList.add('active');
 
-            // Login Form Submission Handler
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                hideMessage();
-                setLoading('login-btn', true);
+        hideMessage();
+      }
 
-                const provername = document.getElementById('login-provername').value;
-                const password = document.getElementById('login-password').value;
+      loginTab.addEventListener('click', () => switchTab('login'));
+      registerTab.addEventListener('click', () => switchTab('register'));
 
-                try {
-                    const response = await fetch(`${BASE_URL}/api/login`, { // Corrected: Using BASE_URL variable
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ provername, password })
-                    });
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideMessage();
+        setLoading('login-btn', true);
 
-                    const data = await response.json();
+        const provername = document.getElementById('login-provername').value;
+        const password = document.getElementById('login-password').value;
 
-                    if (data.success) {
-                        localStorage.setItem('nzkp-token', data.token);
-                        localStorage.setItem('nzkp-provername', data.provername);
-                        showMessage('Login successful! Redirecting...', 'success');
-                        setTimeout(() => {
-                            window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
-                        }, 1500);
-                    } else {
-                        showMessage(data.error || 'Login failed. Please check your credentials.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Login error:', error);
-                    showMessage('Login failed. Please try again. Network issue or server error.', 'error');
-                } finally {
-                    setLoading('login-btn', false);
-                }
-            });
+        try {
+          const response = await fetch(`${BASE_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provername, password })
+          });
 
-            // Register Form Submission Handler
-            document.getElementById('register-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                hideMessage();
-                setLoading('register-btn', true);
+          const data = await response.json();
 
-                const provername = document.getElementById('register-provername').value;
-                const password = document.getElementById('register-password').value;
-                const confirmPassword = document.getElementById('confirm-password'); // Get confirm password input
+          if (data.success) {
+            localStorage.setItem('nzkp-token', data.token);
+            localStorage.setItem('nzkp-provername', data.provername);
+            showMessage('Login successful! Redirecting...', 'success');
+            setTimeout(() => window.location.href = 'mode.html', 1500);
+          } else {
+            showMessage(data.error || 'Login failed.');
+          }
+        } catch (err) {
+          console.error('Login error:', err);
+          showMessage('Login failed. Please try again.');
+        } finally {
+          setLoading('login-btn', false);
+        }
+      });
 
-                if (password !== confirmPassword.value) { // Check against confirmPassword.value
-                    showMessage('Passwords do not match.', 'error');
-                    setLoading('register-btn', false); // Stop loading if passwords don't match
-                    return;
-                }
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideMessage();
+        setLoading('register-btn', true);
 
-                try {
-                    const response = await fetch(`${BASE_URL}/api/register`, { // Corrected: Using BASE_URL variable
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ provername, password })
-                    });
+        const provername = document.getElementById('register-provername').value;
+        const password = document.getElementById('register-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
 
-                    const data = await response.json();
+        if (password !== confirmPassword) {
+          showMessage('Passwords do not match.', 'error');
+          setLoading('register-btn', false);
+          return;
+        }
 
-                    if (data.success) {
-                        localStorage.setItem('nzkp-token', data.token);
-                        localStorage.setItem('nzkp-provername', data.provername);
-                        showMessage('Account created successfully! Redirecting...', 'success');
-                        setTimeout(() => {
-                            window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
-                        }, 1500);
-                    } else {
-                        showMessage(data.error || 'Registration failed. Please try again.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Registration error:', error);
-                    showMessage('Registration failed. Please try again. Network issue or server error.', 'error');
-                } finally {
-                    setLoading('register-btn', false);
-                }
-            });
+        try {
+          const response = await fetch(`${BASE_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provername, password })
+          });
 
-            // Initial Check for Already Logged In Prover
-            // This is critical for redirection from login page if already authenticated.
-            const token = localStorage.getItem('nzkp-token');
-            const provername = localStorage.getItem('nzkp-provername');
+          const data = await response.json();
 
-            if (token && provername) {
-                fetch(`${BASE_URL}/api/verify`, { // Corrected: Using BASE_URL variable
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
-                    } else {
-                        // If token invalid, clear it and stay on login page
-                        localStorage.removeItem('nzkp-token');
-                        localStorage.removeItem('nzkp-provername');
-                    }
-                })
-                .catch(() => {
-                    // Network error or server unreachable, clear token and stay on login page
-                    localStorage.removeItem('nzkp-token');
-                    localStorage.removeItem('nzkp-provername');
-                });
-            }
+          if (data.success) {
+            localStorage.setItem('nzkp-token', data.token);
+            localStorage.setItem('nzkp-provername', data.provername);
+            showMessage('Account created successfully! Redirecting...', 'success');
+            setTimeout(() => window.location.href = 'mode.html', 1500);
+          } else {
+            showMessage(data.error || 'Registration failed.');
+          }
+        } catch (err) {
+          console.error('Registration error:', err);
+          showMessage('Registration failed. Please try again.');
+        } finally {
+          setLoading('register-btn', false);
+        }
+      });
+
+      const token = localStorage.getItem('nzkp-token');
+      const provername = localStorage.getItem('nzkp-provername');
+
+      if (token && provername) {
+        fetch(`${BASE_URL}/api/verify`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = 'mode.html';
+          } else {
+            localStorage.removeItem('nzkp-token');
+            localStorage.removeItem('nzkp-provername');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('nzkp-token');
+          localStorage.removeItem('nzkp-provername');
         });
-    </script>
+      }
+    });
+  </script>
 </body>
 </html>
