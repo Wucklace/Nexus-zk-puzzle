@@ -239,129 +239,143 @@
          * Switches between the login and register forms.
          * @param {string} tab - The ID of the tab to activate ('login' or 'register').
          */
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        // ADDED THIS LINE: Defines BASE_URL for fetch calls within this script
+        const BASE_URL = window.location.origin;
 
-            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-            document.getElementById(`${tab}-form`).classList.add('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginTab = document.querySelector('.auth-tabs .tab-button:nth-child(1)'); // More robust selection
+            const registerTab = document.querySelector('.auth-tabs .tab-button:nth-child(2)'); // More robust selection
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const messageContainer = document.getElementById('message'); // Ensure this ID is used consistently
 
-            hideMessage();
-        }
-
-        /**
-         * Displays a message to the prover (success or error).
-         * @param {string} text - The message content.
-         * @param {string} type - The type of message ('success' or 'error').
-         */
-        function showMessage(text, type = 'error') {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = `message ${type}`;
-            messageEl.style.display = 'block';
-        }
-
-        /**
-         * Hides the message display.
-         */
-        function hideMessage() {
-            document.getElementById('message').style.display = 'none';
-        }
-
-        /**
-         * Sets the loading state for a button (disables it and shows a spinner).
-         * @param {string} btnId - The ID of the button element.
-         * @param {boolean} isLoading - True to show loading state, false to hide.
-         */
-        function setLoading(btnId, isLoading) {
-            const btn = document.getElementById(btnId);
-            if (isLoading) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="loading"></span>Processing...';
-            } else {
-                btn.disabled = false;
-                btn.innerHTML = btnId === 'login-btn' ? 'Sign In' : 'Create Account';
+            // Redefine showMessage and hideMessage as they are local to this script
+            function showMessage(text, type = 'error') {
+                messageContainer.textContent = text;
+                messageContainer.className = `message ${type}`;
+                messageContainer.style.display = 'block';
             }
-        }
 
-        // Login Form Submission Handler
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideMessage();
-            setLoading('login-btn', true);
+            function hideMessage() {
+                messageContainer.style.display = 'none';
+            }
 
-            const provername = document.getElementById('login-provername').value;
-            const password = document.getElementById('login-password').value;
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/login`, { // Corrected: Using BASE_URL variable
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ provername, password })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    localStorage.setItem('nzkp-token', data.token);
-                    localStorage.setItem('nzkp-provername', data.provername);
-                    showMessage('Login successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
-                    }, 1500);
+            function setLoading(btnId, isLoading) {
+                const btn = document.getElementById(btnId);
+                if (isLoading) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="loading"></span>Processing...';
                 } else {
-                    showMessage(data.error || 'Login failed. Please check your credentials.');
+                    btn.disabled = false;
+                    btn.innerHTML = btnId === 'login-btn' ? 'Sign In' : 'Create Account';
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessage('Login failed. Please try again. Network issue or server error.');
-            } finally {
-                setLoading('login-btn', false);
             }
-        });
 
-        // Register Form Submission Handler
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideMessage();
-            setLoading('register-btn', true);
 
-            const provername = document.getElementById('register-provername').value;
-            const password = document.getElementById('register-password').value;
+            // Listener for tab buttons (using direct elements now, not onclick attributes)
+            loginTab.addEventListener('click', () => {
+                switchTab('login');
+            });
 
-            try {
-                const response = await fetch(`${BASE_URL}/api/register`, { // Corrected: Using BASE_URL variable
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ provername, password })
-                });
+            registerTab.addEventListener('click', () => {
+                switchTab('register');
+            });
 
-                const data = await response.json();
+            function switchTab(tab) {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`${tab}-tab`).classList.add('active'); // Use ID for tab buttons
 
-                if (data.success) {
-                    localStorage.setItem('nzkp-token', data.token);
-                    localStorage.setItem('nzkp-provername', data.provername);
-                    showMessage('Account created successfully! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
-                    }, 1500);
-                } else {
-                    showMessage(data.error || 'Registration failed. Please try again.');
+                document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+                document.getElementById(`${tab}-form`).classList.add('active');
+
+                hideMessage();
+            }
+
+            // Login Form Submission Handler
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideMessage();
+                setLoading('login-btn', true);
+
+                const provername = document.getElementById('login-provername').value;
+                const password = document.getElementById('login-password').value;
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/login`, { // Corrected: Using BASE_URL variable
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ provername, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.setItem('nzkp-token', data.token);
+                        localStorage.setItem('nzkp-provername', data.provername);
+                        showMessage('Login successful! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
+                        }, 1500);
+                    } else {
+                        showMessage(data.error || 'Login failed. Please check your credentials.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage('Login failed. Please try again. Network issue or server error.', 'error');
+                } finally {
+                    setLoading('login-btn', false);
                 }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showMessage('Registration failed. Please try again. Network issue or server error.');
-            } finally {
-                setLoading('register-btn', false);
-            }
-        });
+            });
 
-        // Initial Check for Already Logged In Prover
-        document.addEventListener('DOMContentLoaded', () => {
+            // Register Form Submission Handler
+            document.getElementById('register-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideMessage();
+                setLoading('register-btn', true);
+
+                const provername = document.getElementById('register-provername').value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('confirm-password'); // Get confirm password input
+
+                if (password !== confirmPassword.value) { // Check against confirmPassword.value
+                    showMessage('Passwords do not match.', 'error');
+                    setLoading('register-btn', false); // Stop loading if passwords don't match
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/register`, { // Corrected: Using BASE_URL variable
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ provername, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.setItem('nzkp-token', data.token);
+                        localStorage.setItem('nzkp-provername', data.provername);
+                        showMessage('Account created successfully! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
+                        }, 1500);
+                    } else {
+                        showMessage(data.error || 'Registration failed. Please try again.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    showMessage('Registration failed. Please try again. Network issue or server error.', 'error');
+                } finally {
+                    setLoading('register-btn', false);
+                }
+            });
+
+            // Initial Check for Already Logged In Prover
+            // This is critical for redirection from login page if already authenticated.
             const token = localStorage.getItem('nzkp-token');
             const provername = localStorage.getItem('nzkp-provername');
 
@@ -374,13 +388,13 @@
                     if (data.success) {
                         window.location.href = 'mode.html'; // REDIRECT TO MODE.HTML
                     } else {
-                        // If token invalid, clear it
+                        // If token invalid, clear it and stay on login page
                         localStorage.removeItem('nzkp-token');
                         localStorage.removeItem('nzkp-provername');
                     }
                 })
                 .catch(() => {
-                    // Network error or server unreachable, clear token
+                    // Network error or server unreachable, clear token and stay on login page
                     localStorage.removeItem('nzkp-token');
                     localStorage.removeItem('nzkp-provername');
                 });
