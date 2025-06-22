@@ -332,7 +332,7 @@
             const password = document.getElementById('register-password').value;
 
             try {
-                const response = await fetch('http://localhost:3001/api/register', {
+                const response = await fetch(`${BASE_URL}/api/register`, { // Corrected: Using BASE_URL variable
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -366,7 +366,7 @@
             const provername = localStorage.getItem('nzkp-provername');
 
             if (token && provername) {
-                fetch('http://localhost:3001/api/verify', {
+                fetch(`${BASE_URL}/api/verify`, { // Corrected: Using BASE_URL variable
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 .then(response => response.json())
