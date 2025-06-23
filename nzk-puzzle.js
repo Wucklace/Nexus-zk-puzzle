@@ -257,10 +257,10 @@ async function saveScore(score) {
         const data = await response.json();
         if (data.success) {
             console.log('[nzk-puzzle.js][Score] score submitted successfully:', data.message);
-            if (data.isNewAth) {
+            if (data.message.includes('New ATH')) {
                 showMessageBox('New All-Time High Score! 🎉', 'success');
             } else {
-                showMessageBox('Score .', 'info');
+                showMessageBox('Score submitted.', 'info');
             }
         } else {
             console.error('[nzk-puzzle.js][Score] Failed to submit score:', data.error);
@@ -353,15 +353,29 @@ function updateConnectionStatus(status) {
 
 // === Hardcoded Styles (for client-side reference, should match server's logic) ===
 const styleShapes = [
-    { id: 'sq1', name: "Square", pattern: [[0, 0], [0, 1], [1, 0], [1, 1]] },
-    { id: 'lh1', name: "Line (Horizontal)", pattern: [[0, 0], [0, 1], [0, 2]] },
-    { id: 'lv1', name: "Line (Vertical)", pattern: [[0, 0], [1, 0], [2, 0]] },
-    { id: 'ls1', name: "L-Shape", pattern: [[0, 0], [1, 0], [1, 1]] },
-    { id: 'ts1', name: "T-Shape", pattern: [[0, 0], [0, 1], [0, 2], [1, 1]] },
-    { id: 'cr1', name: "Cross", pattern: [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]] },
-    { id: 'zs1', name: "Z-Shape", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
-    { id: 'dtlbr1', name: "Diagonal (TL-BR)", pattern: [[0, 0], [1, 1], [2, 2]] },
-    { id: 'dm1', name: "Diamond", pattern: [[0, 1], [1, 0], [1, 2], [2, 1]] }
+    { name: "Square", pattern: [[0, 0], [0, 1], [1, 0], [1, 1]] },
+    { name: "Line (Horizontal)", pattern: [[1, 0], [1, 1], [1, 2], [1, 3]] },
+    { name: "Line (Vertical)", pattern: [[0, 2], [1, 2], [2, 2], [3, 2]] },
+    { name: "L-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
+    { name: "T-Shape", pattern: [[0, 1], [1, 0], [1, 1], [1, 2]] },
+    { name: "Z-Shape", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
+    { name: "S-Shape", pattern: [[1, 0], [1, 1], [0, 1], [0, 2]] },
+    { name: "Diagonal TL-BR", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
+    { name: "Diagonal BL-TR", pattern: [[3, 0], [2, 1], [1, 2], [0, 3]] },
+    { name: "Diamond", pattern: [[1, 1], [0, 2], [2, 2], [1, 3]] },
+    { name: "Arrowhead", pattern: [[1, 0], [0, 1], [1, 2], [2, 1]] },
+    { name: "Hook", pattern: [[0, 2], [1, 2], [2, 2], [2, 1]] },
+    { name: "Corner", pattern: [[2, 0], [2, 1], [3, 0], [3, 1]] },
+    { name: "Stairs", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
+    { name: "Offset Line", pattern: [[0, 1], [1, 2], [2, 3], [3, 2]] },
+    { name: "Inverted L", pattern: [[0, 1], [1, 1], [2, 1], [2, 0]] },
+    { name: "C-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
+    { name: "Y-Fragment", pattern: [[0, 1], [1, 0], [1, 1], [2, 1]] },
+    { name: "Tipped T", pattern: [[1, 0], [1, 1], [1, 2], [0, 1]] },
+    { name: "Zig-Zag", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
+    { name: "Bent Line", pattern: [[1, 0], [2, 0], [2, 1], [3, 1]] },
+    { name: "Snake Bend", pattern: [[1, 0], [1, 1], [2, 1], [2, 2]] },
+    { name: "Half Cross", pattern: [[1, 1], [0, 1], [1, 0], [2, 1]] }
 ];
 
 /**
@@ -491,7 +505,7 @@ function toggleCell(nodeElement, index, mode) {
     }
 
 
-    if (selectedCount >= 3) { // Minimum 3 nodes for any pattern in styleShapes (Line)
+    if (selectedCount >= 4) { // Minimum 4 nodes for any pattern in styleShapes (Line)
         const selectedNodeIndices = Array.from(activeCells);
 
         if (mode === 'single') {
@@ -515,7 +529,7 @@ function toggleCell(nodeElement, index, mode) {
                 currentSingleProverScore += 10; // +10 points for successful proof
                 timeLeft += 5; // Add 5 seconds to timer for successful prove (Single Prover only)
                 if (singleTimerEl) singleTimerEl.innerText = timeLeft; // Update timer display
-                showMessageBox('successfully proof +10 score. +5 seconds!', 'success');
+                showMessageBox('✅Proof Successful +10 score. +5 seconds!', 'success');
 
                 // Visual feedback for success
                 activeNodeElements.forEach(node => node.classList.add('proof-success'));
@@ -535,7 +549,7 @@ function toggleCell(nodeElement, index, mode) {
             } else {
                 failCount++;
                 // currentSingleProverScore = Math.max(0, currentSingleProverScore - 5); // REMOVED: No penalty for single prover fail
-                showMessageBox('fail proof', 'error'); // Message updated, no score deduction mentioned
+                showMessageBox('❌Fail Proof', 'error'); // Message updated, no score deduction mentioned
 
                 // Visual feedback for failure
                 activeNodeElements.forEach(node => node.classList.add('proof-fail'));
@@ -733,10 +747,6 @@ function initializeSingleProverGame() {
     //currentSingleProverStyles = generateRandomStylesForClient(5); // 5 styles for single prover
     //buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
 
-    // ADDED: Start the dedicated style refresh loop here
-    startSingleProverStyleRefreshLoop();
-    
-
     resetSingleProverGame();
     console.log('[nzk-puzzle.js][SingleProver] Game Initialized.');
 }
@@ -884,11 +894,13 @@ window.startGame = function() { // Exposed globally for index.html
     activeCells.clear(); // Ensure global set is clear
     if (singleActiveCountEl) singleActiveCountEl.innerText = 0;
 
-    currentSingleProverStyles = generateRandomStylesForClient(5); // Generate new styles for the game
-    buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles); // Render them
-
+    // Reset the game state and timer
     startTimerSingleProver();
     console.log('[nzk-puzzle.js][SingleProver] Game started.');
+
+    // Start the style refresh loop ONLY when the game actively begins
+    startSingleProverStyleRefreshLoop(); // Start the style refresh loop
+    console.log('[nzk-puzzle.js][SingleProver] Style refresh loop started.');
 }
 
 window.endGame = async function() { // Exposed globally for index.html
@@ -913,7 +925,7 @@ window.endGame = async function() { // Exposed globally for index.html
         console.log(`[nzk-puzzle.js][SingleProver] New ATH score: ${athScore}`);
     } else {
         console.log(`[nzk-puzzle.js][SingleProver] Current score ${currentSingleProverScore} is not a new ATH. ATH: ${athScore}`);
-        showMessageBox(`Score: ${currentSingleProverScore}. Not a new ATH.`, 'info');
+        showMessageBox(`Score: ${currentSingleProverScore}. score.`, 'info');
     }
 
     // Display final results on the dedicated game over screen

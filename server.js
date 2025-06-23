@@ -108,14 +108,28 @@ let proversCollection; // To hold the reference to the provers collection
 
         const serverStyleShapes = [
             { name: "Square", pattern: [[0, 0], [0, 1], [1, 0], [1, 1]] },
-            { name: "Line (Horizontal)", pattern: [[0, 0], [0, 1], [0, 2]] },
-            { name: "Line (Vertical)", pattern: [[0, 0], [1, 0], [2, 0]] },
-            { name: "L-Shape", pattern: [[0, 0], [1, 0], [1, 1]] },
-            { name: "T-Shape", pattern: [[0, 0], [0, 1], [0, 2], [1, 1]] },
-            { name: "Cross", pattern: [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]] },
+            { name: "Line (Horizontal)", pattern: [[1, 0], [1, 1], [1, 2], [1, 3]] },
+            { name: "Line (Vertical)", pattern: [[0, 2], [1, 2], [2, 2], [3, 2]] },
+            { name: "L-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
+            { name: "T-Shape", pattern: [[0, 1], [1, 0], [1, 1], [1, 2]] },
             { name: "Z-Shape", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
-            { name: "Diagonal (TL-BR)", pattern: [[0, 0], [1, 1], [2, 2]] },
-            { name: "Diamond", pattern: [[0, 1], [1, 0], [1, 2], [2, 1]] }
+            { name: "S-Shape", pattern: [[1, 0], [1, 1], [0, 1], [0, 2]] },
+            { name: "Diagonal TL-BR", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
+            { name: "Diagonal BL-TR", pattern: [[3, 0], [2, 1], [1, 2], [0, 3]] },
+            { name: "Diamond", pattern: [[1, 1], [0, 2], [2, 2], [1, 3]] },
+            { name: "Arrowhead", pattern: [[1, 0], [0, 1], [1, 2], [2, 1]] },
+            { name: "Hook", pattern: [[0, 2], [1, 2], [2, 2], [2, 1]] },
+            { name: "Corner", pattern: [[2, 0], [2, 1], [3, 0], [3, 1]] },
+            { name: "Stairs", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
+            { name: "Offset Line", pattern: [[0, 1], [1, 2], [2, 3], [3, 2]] },
+            { name: "Inverted L", pattern: [[0, 1], [1, 1], [2, 1], [2, 0]] },
+            { name: "C-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
+            { name: "Y-Fragment", pattern: [[0, 1], [1, 0], [1, 1], [2, 1]] },
+            { name: "Tipped T", pattern: [[1, 0], [1, 1], [1, 2], [0, 1]] },
+            { name: "Zig-Zag", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
+            { name: "Bent Line", pattern: [[1, 0], [2, 0], [2, 1], [3, 1]] },
+            { name: "Snake Bend", pattern: [[1, 0], [1, 1], [2, 1], [2, 2]] },
+            { name: "Half Cross", pattern: [[1, 1], [0, 1], [1, 0], [2, 1]] }
         ];
 
         let serverStyleIdCounter = 0;
@@ -513,7 +527,7 @@ let proversCollection; // To hold the reference to the provers collection
                     );
                     res.json({ success: true, message: 'New ATH score recorded!' });
                 } else {
-                    res.json({ success: true, message: 'Score ,', });
+                    res.json({ success: true, message: 'Score submitted.' });
                 }
             } catch (error) {
                 console.error('Score submission error:', error);
