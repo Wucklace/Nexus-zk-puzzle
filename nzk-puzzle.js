@@ -241,7 +241,7 @@ const response = await fetch(`${BASE_URL}/api/prover/${provername}`, { // Correc
 // Global function to save score (primarily for single prover)
 async function saveScore(score) {
     try {
-        const response = await fetch(BASE_URL, { // Corrected: Using BASE_URL variable
+        const response = await fetch(`${BASE_URL}/api/submit-score`, { // Corrected: Using BASE_URL variable
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
