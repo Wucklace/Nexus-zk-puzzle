@@ -245,9 +245,9 @@ async function saveScore(score) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`  // Ensure token is sent for authentication
             },
-            body: JSON.stringify({ score })
+            body: JSON.stringify({ provername, score }) // Ensure correct data is sent
         });
         const data = await response.json();
         if (data.success) {

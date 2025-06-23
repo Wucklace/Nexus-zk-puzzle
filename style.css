@@ -317,13 +317,13 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 }
 
 @media (max-width: 500px) {
-    #grid, #multi-grid, .vs-grid { --node-size: 18px; max-width: 250px; }
+    #grid, #multi-grid, .vs-grid { --node-size: 15px; max-width: 250px; }
     #game-status, #game-control { width: 85%; }
     .leaderboard-table th, .leaderboard-table td { padding: 6px 8px; }
     .rank, .score, .prover-name { font-size: 0.8em; }
 }
 
 @media (max-width: 350px) {
-    #grid, #multi-grid, .vs-grid { --node-size: 15px; max-width: 200px; }
+    #grid, #multi-grid, .vs-grid { --node-size: 10px; max-width: 200px; }
     #game-control button { padding: 4px; font-size: 0.8em; }
 }
