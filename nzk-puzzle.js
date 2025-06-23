@@ -1,5 +1,10 @@
-// === Custom Message Box (Replaces alert/confirm) ===
-// This function creates a simple, non-blocking message box.
+// --- Global Constants and Variables for Style Refresh (confirm these are at the top of nzk-puzzle.js) ---
+const SINGLE_PROVER_PREVIEW_REFRESH_RATE_MS = 10 * 1000; // 10 seconds for full style refresh
+const SINGLE_PROVER_NUM_STYLES_TO_DISPLAY = 5; // // The number of styles to show initially and on full refresh
+
+let singleProverStyleRefreshInterval = null; // To hold the setInterval ID
+
+// This will be used to dynamically set the base URL for API calls
 const BASE_URL = window.location.origin; // This will dynamically get your app's URL on Render.com
 
 function showMessageBox(message, type = 'info', duration = 3000) {
@@ -251,11 +256,11 @@ async function saveScore(score) {
         });
         const data = await response.json();
         if (data.success) {
-            console.log('[nzk-puzzle.js][Score] Score submitted successfully:', data.message);
-            if (data.message.includes('new ATH')) {
+            console.log('[nzk-puzzle.js][Score] score submitted successfully:', data.message);
+            if (data.isNewAth) {
                 showMessageBox('New All-Time High Score! 🎉', 'success');
             } else {
-                showMessageBox('Score submitted.', 'info');
+                showMessageBox('Score .', 'info');
             }
         } else {
             console.error('[nzk-puzzle.js][Score] Failed to submit score:', data.error);
@@ -517,12 +522,12 @@ function toggleCell(nodeElement, index, mode) {
 
                 // Remove the proved style and add a new one
                 currentSingleProverStyles = currentSingleProverStyles.filter(s => s.id !== provedStyle.id);
-                const newStyle = generateRandomStylesForClient(1)[0];
+                /**const newStyle = generateRandomStylesForClient(1)[0];  The lines to generate and add a newStyle are REMOVED here
                 if (newStyle) {
-                    currentSingleProverStyles.push(newStyle);
+                    currentSingleProverStyles.push(newStyle);   because proved styles should be subtracted, not replaced immediately.
                 } else {
                     console.warn("[Single Prover] Could not generate a new style. Running out of unique styles?");
-                }
+                }**/
 
                 buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
                 console.log(`[Single Prover] Score: ${currentSingleProverScore}`);
@@ -725,8 +730,12 @@ function initializeSingleProverGame() {
 
     buildGrid(singleGrid, 'single');
 
-    currentSingleProverStyles = generateRandomStylesForClient(5); // 5 styles for single prover
-    buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
+    //currentSingleProverStyles = generateRandomStylesForClient(5); // 5 styles for single prover
+    //buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
+
+    // ADDED: Start the dedicated style refresh loop here
+    startSingleProverStyleRefreshLoop();
+    
 
     resetSingleProverGame();
     console.log('[nzk-puzzle.js][SingleProver] Game Initialized.');
@@ -762,6 +771,9 @@ function resetSingleProverGame() {
     if (singleTimerEl) singleTimerEl.innerText = timeLeft;
     stopTimerSingleProver(); // Ensure timer is stopped on reset
 
+    // ADDED: Stop the style refresh loop on game reset/end
+    stopSingleProverStyleRefreshLoop(); // This is important!
+
     // Hide final results display
     if (singleFinalResultsDisplay) singleFinalResultsDisplay.classList.add('hidden');
     if (gameOverScreenSingle) gameOverScreenSingle.classList.remove('active');
@@ -781,9 +793,7 @@ function startTimerSingleProver() {
     if (timerInterval) {
         clearInterval(timerInterval);
     }
-
-    let styleRefreshTimer = 0;
-    const styleRefreshInterval = 15; // seconds (to refresh styles if no proofs happen)
+     
 
     timerInterval = setInterval(() => {
         // This check should be sufficient, but re-ordering for clarity
@@ -799,13 +809,7 @@ function startTimerSingleProver() {
 
         if (singleTimerEl) singleTimerEl.innerText = timeLeft;
 
-        // Refresh styles periodically if no proofs are made to keep challenges fresh
-        if (styleRefreshTimer % styleRefreshInterval === 0) {
-            currentSingleProverStyles = generateRandomStylesForClient(5); // Regenerate all 5 styles
-            buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
-            console.log(`[Single Prover] Refreshed 5 styles.`);
-            styleRefreshTimer = 0; // Reset refresh timer
-        }
+        
 
         if (timeLeft <= 0) {
             console.log('[Single Prover] Timer reached 0. Ending game.');
@@ -818,6 +822,29 @@ function startTimerSingleProver() {
     console.log('[nzk-puzzle.js][SingleProver] Timer started.');
 }
 
+/**
+ * Starts the continuous refresh loop for Single Prover style previews.
+ * his function will completely replace all displayed styles at a set interval.
+ */
+function startSingleProverStyleRefreshLoop() {
+    // Clear any existing interval to prevent multiple loops running concurrently
+    if (singleProverStyleRefreshInterval) {
+        clearInterval(singleProverStyleRefreshInterval);
+    }
+
+    // Perform an initial full refresh of styles when the loop starts
+    currentSingleProverStyles = generateRandomStylesForClient(SINGLE_PROVER_NUM_STYLES_TO_DISPLAY);
+    buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
+    console.log(`[Single Prover] Initial full style refresh with ${currentSingleProverStyles.length} styles.`);
+
+    // Set up the interval for subsequent full refreshes
+    singleProverStyleRefreshInterval = setInterval(() => {
+        currentSingleProverStyles = generateRandomStylesForClient(SINGLE_PROVER_NUM_STYLES_TO_DISPLAY);
+        buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
+        console.log(`[Single Prover] Full style refresh (10s timer) with ${currentSingleProverStyles.length} styles.`);
+    },  SINGLE_PROVER_PREVIEW_REFRESH_RATE_MS);
+    
+}
 
 function stopTimerSingleProver() {
     if (timerInterval) {
@@ -826,6 +853,19 @@ function stopTimerSingleProver() {
         console.log('[nzk-puzzle.js][SingleProver] Timer stopped.');
     }
 }
+
+/**
+ * Stops the continuous refresh loop for Single Prover style previews.
+ * Call this when the single prover game ends or the mode changes.
+ */
+function stopSingleProverStyleRefreshLoop() {
+    if (singleProverStyleRefreshInterval) {
+        clearInterval(singleProverStyleRefreshInterval);
+        singleProverStyleRefreshInterval = null; // Reset the interval ID
+        console.log("[Single Prover] Style refresh loop stopped.");
+    }
+}
+
 
 window.startGame = function() { // Exposed globally for index.html
     gameActive = true;

@@ -513,7 +513,7 @@ let proversCollection; // To hold the reference to the provers collection
                     );
                     res.json({ success: true, message: 'New ATH score recorded!' });
                 } else {
-                    res.json({ success: true, message: 'Score submitted, but not a new ATH.' });
+                    res.json({ success: true, message: 'Score ,', });
                 }
             } catch (error) {
                 console.error('Score submission error:', error);
