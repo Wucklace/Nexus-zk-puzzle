@@ -107,7 +107,7 @@ h1 { margin: 10px 0; text-align: center; }
 
 #styles-preview {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Default to column for desktop/larger screens */
     gap: 5px;
     margin-top: 5px;
 }
@@ -332,61 +332,98 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     }
     
     #styles-preview {
-        height: auto; /* Change from 30vh to auto to prevent forced height */
-        max-height: 200px; /* Optional: add a max-height if styles list gets too long */
-        overflow-y: auto; /* Keep overflow for scrolling */
-        width: 90%; /* Ensure preview takes width on mobile */
-        max-width: 250px; /* Constrain max width for alignment with grid */
-        margin-bottom: 10px; /* Add some margin below styles-preview */
+        /* ORIGINAL STYLES */
+        /* height: auto; */
+        /* max-height: 200px; */
+        /* overflow-y: auto; */
+        /* width: 90%; */
+        /* max-width: 250px; */
+        /* margin-bottom: 10px; */
+
+        /* NEW STYLES FOR HORIZONTAL LAYOUT */
+        display: grid; /* Changed to grid for more flexible horizontal layout */
+        /* This will create columns for your styles, each fitting its content. */
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* Adjust minmax(width) for style items */
+        gap: 10px; /* Adjust gap between style previews */
+        justify-content: center; /* Horizontally center the styles */
+        flex-wrap: wrap; /* Ensure styles wrap to the next line if space runs out */
+
+        height: auto; /* Allow content to dictate height */
+        max-height: 100px; /* Optional: helpful max-height to keep it compact */
+        overflow-x: auto; /* Allow horizontal scrolling if styles don't fit */
+        overflow-y: hidden; /* Hide vertical scroll */
+        
+        width: 90%; /* Take full width on mobile */
+        max-width: 300px; /* Constrain max width for alignment with grid */
+        margin-top: 10px;
+        margin-bottom: 10px; /* Add margin below styles-preview */
     }
+    .style-preview-wrapper {
+        width: 60px; /* Consistent width for each style preview item */
+        height: 60px; /* Consistent height */
+        flex-shrink: 0; /* Prevent shrinking too much */
+        flex-grow: 0; /* Prevent growing too much */
+        padding: 5px; /* Adjust padding */
+        gap: 2px; /* Adjust gap between shape and name inside wrapper */
+        justify-content: center; /* Center content vertically */
+    }
+    .style-name {
+        font-size: 0.7em; /* Smaller font for style names in horizontal layout */
+    }
+
     .node { width: auto; height: auto; }
 }
 
+/* --- Mobile Grid Sizes (7x7) and Node Size Increase --- */
+/* For screens 500px and below */
 @media (max-width: 500px) {
-    /* Set grid variables for 8x8 layout and node size */
-    #grid, #multi-grid, .vs-grid {
-        --grid-cols: 8;
-        --grid-rows: 8;
-        --node-size: 15px; /* Your specified 15px nodes */
-        grid-template-columns: repeat(var(--grid-cols), var(--node-size)); /* Apply new grid vars */
-        grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        /* Calculate max-width: (8 * 15px) + (7 * 1px gap) = 120 + 7 = 127px */
-        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px)); /* Use 1px gap from your #grid */
-    }
+    /* Existing rules */
     #game-status, #game-control { width: 85%; }
     .leaderboard-table th, .leaderboard-table td { padding: 6px 8px; }
     .rank, .score, .prover-name { font-size: 0.8em; }
-    /* Removed redundant node width/height as it's now handled by --node-size */
-    /* .node { width: auto; height: auto; } */
+
+    /* Grid definitions for 7x7 layout and larger node size */
+    #grid, #multi-grid, .vs-grid {
+        --grid-cols: 7; /* NEW: Changed to 7 columns */
+        --grid-rows: 7;  /* NEW: Changed to 7 rows */
+        --node-size: 25px; /* Increased node size for better touch */
+        grid-template-columns: repeat(var(--grid-cols), var(--node-size));
+        grid-template-rows: repeat(var(--grid-rows), var(--node-size));
+        /* Calculate max-width: (7 * 25px) + (6 * 1px gap) = 175 + 6 = 181px */
+        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
+    }
 }
 
+/* For screens 350px and below */
 @media (max-width: 350px) {
-    /* Set grid variables for 8x8 layout and smaller node size */
-    #grid, #multi-grid, .vs-grid {
-        --grid-cols: 8;
-        --grid-rows: 8;
-        --node-size: 10px; /* Your specified 10px nodes */
-        grid-template-columns: repeat(var(--grid-cols), var(--node-size)); /* Apply new grid vars */
-        grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        /* Calculate max-width: (8 * 10px) + (7 * 1px gap) = 80 + 7 = 87px */
-        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px)); /* Use 1px gap from your #grid */
-    }
+    /* Existing rules */
     #game-control button { padding: 4px; font-size: 0.8em; }
-    /* Removed redundant node width/height as it's now handled by --node-size */
-    /* .node { width: auto; height: auto; } */
-}
-@media (max-width: 300px) {
-    /* Set grid variables for 8x8 layout and even smaller node size */
+
+    /* Grid definitions for 7x7 layout and slightly smaller node size */
     #grid, #multi-grid, .vs-grid {
-        --grid-cols: 8;
-        --grid-rows: 8;
-        --node-size: 8px; /* Your specified 8px nodes */
-        grid-template-columns: repeat(var(--grid-cols), var(--node-size)); /* Apply new grid vars */
+        --grid-cols: 7;
+        --grid-rows: 7;
+        --node-size: 20px; /* Slightly smaller nodes for very small phones */
+        grid-template-columns: repeat(var(--grid-cols), var(--node-size));
         grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        /* Calculate max-width: (8 * 8px) + (7 * 1px gap) = 64 + 7 = 71px */
-        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px)); /* Use 1px gap from your #grid */
+        /* Calculate max-width: (7 * 20px) + (6 * 1px gap) = 140 + 6 = 146px */
+        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
     }
+}
+
+/* For screens 300px and below (your newly added breakpoint) */
+@media (max-width: 300px) {
+    /* Existing rules */
     #game-control button { padding: 3px; font-size: 0.7em; }
-    /* Removed redundant node width/height as it's now handled by --node-size */
-    /* .node { width: auto; height: auto; } */
+
+    /* Grid definitions for 7x7 layout and even smaller node size */
+    #grid, #multi-grid, .vs-grid {
+        --grid-cols: 7;
+        --grid-rows: 7;
+        --node-size: 15px; /* Adjusting to 15px for 300px width */
+        grid-template-columns: repeat(var(--grid-cols), var(--node-size));
+        grid-template-rows: repeat(var(--grid-rows), var(--node-size));
+        /* Calculate max-width: (7 * 15px) + (6 * 1px gap) = 105 + 6 = 111px */
+        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
+    }
 }
