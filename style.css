@@ -36,14 +36,20 @@ h1 { margin: 10px 0; text-align: center; }
     box-sizing: border-box;
 }
 
+/* --- #game-status: Modified to contain #styles-preview properly on desktop --- */
 #game-status {
-    width: 180px;
+    width: 180px; /* Fixed width for desktop */
     background: #2e2e2e;
-    padding: 10px;
+    padding: 10px; /* Base padding for other content */
     border-radius: 6px;
     box-shadow: 0 0 8px rgba(0,0,0,0.5);
     text-align: left;
     margin-right: 10px;
+
+    /* ADDED: Flex container to manage its children (#styles-preview) vertically */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content within game-status */
 }
 
 #grid {
@@ -105,30 +111,37 @@ h1 { margin: 10px 0; text-align: center; }
     100% { transform: translateX(0); }
 }
 
-/* --- Styles Preview: Global (Desktop/Large Screen) Settings --- */
+/* --- Styles Preview: Global (Desktop) Settings --- */
 #styles-preview {
-    display: grid; /* Use grid for horizontal layout on all screens */
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for 2x2 layout on desktop */
-    gap: 15px; /* Larger gap for desktop */
-    margin-top: 15px; /* Consistent margin */
-    padding: 10px;
+    display: grid; /* Always use grid for horizontal layout */
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for 2x2 layout */
+    
+    /* MODIFIED: Reduce padding and gap significantly for a compact look on desktop */
+    gap: 8px; /* Smaller gap between items for desktop */
+    padding: 5px; /* Smaller padding around the entire preview */
+    
+    margin-top: 10px; /* Slightly reduced margin-top */
     border: 1px solid #555;
     border-radius: 8px;
     background-color: #3a3a3a;
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
-    /* Remove max-height and overflow-y here, as 2x2 should not overflow vertically */
-    /* width: auto; max-width: auto; - will be controlled by parent container and grid */
+    width: 100%; /* Ensure it fills its parent (#game-status) */
+    box-sizing: border-box; /* Include padding and border in width */
 }
 
+/* --- style-preview-wrapper: Global (Desktop) Settings --- */
 .style-preview-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Center content vertically in the wrapper */
-    gap: 5px; /* Adjusted gap inside wrapper */
-    padding: 8px; /* Adjusted padding */
+    justify-content: center; /* Center content vertically */
+    
+    /* MODIFIED: Reduce padding and gap for a compact look */
+    gap: 2px; /* Smaller gap inside wrapper (between shape and name) */
+    padding: 3px; /* Smaller padding inside each wrapper */
+    
     border: 1px solid #0095ff;
-    border-radius: 8px;
+    border-radius: 8px; /* Consistent radius */
     background-color: #2e2e2e;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     transition: all 0.2s ease;
@@ -144,20 +157,25 @@ h1 { margin: 10px 0; text-align: center; }
     background-color: #222;
 }
 
-.style-shape { display: grid; gap: 1px; }
+.style-shape { display: grid; gap: 1px; } /* Keep 1px gap for pattern nodes */
 
+/* --- style-node: Global (Desktop) Settings --- */
 .style-node {
-    width: 15px; /* Increased size for desktop preview nodes */
-    height: 15px;
+    /* MODIFIED: Significantly reduced size for desktop preview nodes */
+    /* Two 4-node patterns side-by-side in 180px width requires very small nodes */
+    width: 8px;
+    height: 8px;
     background-color: #555;
     border-radius: 2px;
 }
 
 .style-node.active { background-color: #0095ff; }
 
+/* --- style-name: Global (Desktop) Settings --- */
 .style-name {
     color: #f8f8f8;
-    font-size: 0.9em; /* Increased font size for desktop preview names */
+    /* MODIFIED: Significantly reduced font size for desktop preview names */
+    font-size: 0.6em; /* Very small font to fit */
     font-weight: bold;
 }
 
@@ -334,54 +352,50 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         justify-content: flex-start; /* Align content to top on mobile */
     }
     
+    /* --- Mobile: game-status, game-control, grid base sizing --- */
     #game-status, #game-control { width: 90%; margin: 5px 0; }
     
     #grid {
         height: auto; /* Change from 50vh to auto to prevent forced height */
         width: 100%;
-        max-width: 250px;
+        max-width: 250px; /* Base max-width for 768px and below, will be overridden */
         aspect-ratio: 1 / 1;
         margin: 10px auto;
     }
     
-    /* --- Styles Preview: Mobile/Tablet Overrides --- */
+    /* --- Mobile: styles-preview overrides --- */
     #styles-preview {
-        grid-template-columns: repeat(2, 1fr); /* Keep 2 columns for most mobile/tablet sizes */
-        gap: 10px; /* Slightly smaller gap than desktop */
-        justify-content: center; /* Horizontally center the styles */
-        flex-wrap: wrap; /* Ensure styles wrap to the next line if space runs out */
-
+        /* Already defined as grid 2x2 globally, just adjusting specifics for mobile */
+        gap: 8px; /* Slightly smaller gap than desktop */
+        padding: 5px; /* Consistent padding */
+        
         height: auto;
-        max-height: 100px; /* Optional: helpful max-height to keep it compact vertically */
-        overflow-x: auto; /* Allow horizontal scrolling if items don't fit in 2 columns (e.g. very narrow) */
+        max-height: 100px; /* Keep max-height for vertical constraint */
+        overflow-x: auto; /* Allow horizontal scrolling if items don't fit in 2 columns (very narrow) */
         overflow-y: hidden; /* Hide vertical scroll */
         
         width: 90%; /* Take full width on mobile */
-        max-width: 300px; /* Constrain max width for alignment with grid */
+        max-width: 280px; /* Constraint max width for alignment with grid */
         margin-top: 10px;
         margin-bottom: 10px; /* Add margin below styles-preview */
     }
     .style-preview-wrapper {
-        width: auto; /* Fill grid cell */
-        height: auto; /* Adapt to content */
-        aspect-ratio: 1 / 1; /* Maintain square */
         padding: 5px; /* Adjusted padding */
         gap: 2px; /* Adjusted gap inside wrapper */
-        flex-shrink: 0;
-        flex-grow: 1;
     }
     .style-node {
-        width: 10px; /* Revert to smaller nodes for mobile previews */
+        width: 10px; /* Increased nodes for mobile previews to make them more visible */
         height: 10px;
     }
     .style-name {
-        font-size: 0.7em; /* Smaller font for style names in horizontal layout */
+        font-size: 0.7em; /* Smallest font for style names in horizontal layout */
     }
 
-    .node { width: auto; height: auto; }
+    .node { width: auto; height: auto; } /* Auto size for nodes based on --node-size var */
 }
 
-/* --- Mobile Grid Sizes (7x7) and Node Size Increase --- */
+/* --- Mobile Grid Sizes (6x6) and Node Size Increase (Re-calculated) --- */
+
 /* For screens 500px and below */
 @media (max-width: 500px) {
     /* Existing rules */
@@ -389,20 +403,21 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     .leaderboard-table th, .leaderboard-table td { padding: 6px 8px; }
     .rank, .score, .prover-name { font-size: 0.8em; }
 
-    /* Grid definitions for 7x7 layout and larger node size */
+    /* Grid definitions for 6x6 layout and larger node size */
     #grid, #multi-grid, .vs-grid {
-        --grid-cols: 7; /* NEW: Changed to 7 columns */
-        --grid-rows: 7;  /* NEW: Changed to 7 rows */
-        --node-size: 25px; /* Increased node size for better touch */
+        --grid-cols: 6; /* NEW: Changed to 6 columns */
+        --grid-rows: 6;  /* NEW: Changed to 6 rows */
+        --node-size: 40px; /* MODIFIED: Increased node size significantly for better touch (6x6) */
         grid-template-columns: repeat(var(--grid-cols), var(--node-size));
         grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        /* Calculate max-width: (7 * 25px) + (6 * 1px gap) = 175 + 6 = 181px */
+        /* Calculate max-width: (6 * 40px) + (5 * 1px gap) = 240 + 5 = 245px */
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
+        margin: 10px auto; /* Ensure it's centered */
     }
     /* Styles Preview specific adjustments for this breakpoint */
     #styles-preview {
-        gap: 8px; /* Slightly smaller gap */
-        max-width: 280px; /* Reduce max-width for smaller screens */
+        gap: 8px; /* Consistent gap */
+        max-width: 250px; /* Reduce max-width for tighter fit, aligned with grid */
     }
     .style-name {
         font-size: 0.65em; /* Even smaller font */
@@ -414,46 +429,45 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     /* Existing rules */
     #game-control button { padding: 4px; font-size: 0.8em; }
 
-    /* Grid definitions for 7x7 layout and slightly smaller node size */
+    /* Grid definitions for 6x6 layout and slightly smaller node size */
     #grid, #multi-grid, .vs-grid {
-        --grid-cols: 7;
-        --grid-rows: 7;
-        --node-size: 20px; /* Slightly smaller nodes for very small phones */
+        --grid-cols: 6;
+        --grid-rows: 6;
+        --node-size: 35px; /* MODIFIED: Smaller nodes for very small phones */
         grid-template-columns: repeat(var(--grid-cols), var(--node-size));
         grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        /* Calculate max-width: (7 * 20px) + (6 * 1px gap) = 140 + 6 = 146px */
+        /* Calculate max-width: (6 * 35px) + (5 * 1px gap) = 210 + 5 = 215px */
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
     }
     /* Styles Preview specific adjustments for this breakpoint */
     #styles-preview {
         gap: 5px; /* Even smaller gap */
-        max-width: 260px; /* Reduce max-width further */
+        max-width: 220px; /* Reduce max-width further */
     }
     .style-name {
         font-size: 0.6em; /* Smallest font */
     }
 }
 
-/* For screens 300px and below (your newly added breakpoint) */
+/* For screens 300px and below */
 @media (max-width: 300px) {
     /* Existing rules */
     #game-control button { padding: 3px; font-size: 0.7em; }
 
-    /* Grid definitions for 7x7 layout and even smaller node size */
+    /* Grid definitions for 6x6 layout and even smaller node size */
     #grid, #multi-grid, .vs-grid {
-        --grid-cols: 7;
-        --grid-rows: 7;
-        --node-size: 15px; /* Adjusting to 15px for 300px width */
+        --grid-cols: 6;
+        --grid-rows: 6;
+        --node-size: 30px; /* MODIFIED: Adjusting to 30px for 300px width */
         grid-template-columns: repeat(var(--grid-cols), var(--node-size));
         grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        /* Calculate max-width: (7 * 15px) + (6 * 1px gap) = 105 + 6 = 111px */
+        /* Calculate max-width: (6 * 30px) + (5 * 1px gap) = 180 + 5 = 185px */
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
     }
     /* Styles Preview specific adjustments for this breakpoint */
     #styles-preview {
         gap: 3px;
-        max-width: 200px; /* Ensure it fits the screen, potentially making it 2 columns and very small */
-        grid-template-columns: repeat(2, 1fr); /* Force 2 columns at this very small width if needed */
+        max-width: 185px; /* Align with grid max-width */
     }
     .style-name {
         font-size: 0.55em; /* Smallest font for extreme narrowness */
