@@ -1,6 +1,6 @@
 // --- Global Constants and Variables for Style Refresh (confirm these are at the top of nzk-puzzle.js) ---
 const SINGLE_PROVER_PREVIEW_REFRESH_RATE_MS = 10 * 1000; // 10 seconds for full style refresh
-const SINGLE_PROVER_NUM_STYLES_TO_DISPLAY = 5; // // The number of styles to show initially and on full refresh
+const SINGLE_PROVER_NUM_STYLES_TO_DISPLAY = 4; // // The number of styles to show initially and on full refresh
 
 let singleProverStyleRefreshInterval = null; // To hold the setInterval ID
 
@@ -362,19 +362,19 @@ const styleShapes = [
     { name: "S-Shape", pattern: [[1, 0], [1, 1], [0, 1], [0, 2]] },
     { name: "Diagonal TL-BR", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
     { name: "Diagonal BL-TR", pattern: [[3, 0], [2, 1], [1, 2], [0, 3]] },
-    { name: "Diamond", pattern: [[1, 1], [0, 2], [2, 2], [1, 3]] },
-    { name: "Arrowhead", pattern: [[1, 0], [0, 1], [1, 2], [2, 1]] },
-    { name: "Hook", pattern: [[0, 2], [1, 2], [2, 2], [2, 1]] },
-    { name: "Corner", pattern: [[2, 0], [2, 1], [3, 0], [3, 1]] },
+    { name: "Diamond", pattern: [[4, 1], [0, 2], [2, 2], [1, 3]] },
+    { name: "Arrowhead", pattern: [[5, 0], [0, 1], [1, 2], [2, 1]] },
+    { name: "Hook", pattern: [[2, 2], [1, 2], [2, 2], [2, 1]] },
+    { name: "Corner", pattern: [[2, 6], [2, 1], [3, 0], [3, 1]] },
     { name: "Stairs", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
     { name: "Offset Line", pattern: [[0, 1], [1, 2], [2, 3], [3, 2]] },
     { name: "Inverted L", pattern: [[0, 1], [1, 1], [2, 1], [2, 0]] },
     { name: "C-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
-    { name: "Y-Fragment", pattern: [[0, 1], [1, 0], [1, 1], [2, 1]] },
+    { name: "Y-Fragment", pattern: [[5, 1], [1, 0], [1, 1], [2, 1]] },
     { name: "Tipped T", pattern: [[1, 0], [1, 1], [1, 2], [0, 1]] },
     { name: "Zig-Zag", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
-    { name: "Bent Line", pattern: [[1, 0], [2, 0], [2, 1], [3, 1]] },
-    { name: "Snake Bend", pattern: [[1, 0], [1, 1], [2, 1], [2, 2]] },
+    { name: "Bent Line", pattern: [[1, 4], [2, 0], [2, 1], [3, 1]] },
+    { name: "Snake Bend", pattern: [[1, 3], [1, 1], [2, 1], [2, 2]] },
     { name: "Half Cross", pattern: [[1, 1], [0, 1], [1, 0], [2, 1]] }
 ];
 

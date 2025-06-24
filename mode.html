@@ -136,16 +136,20 @@
         @media (max-width: 768px) {
             h1 {
                 font-size: 2em;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
             }
             .mode-container {
-                padding: 30px;
+                width: 90%; /* Full width on small screens */
+                max-width: none; /* Remove max-width to allow full width */
+                padding: 20px;
+                height: auto; /* Allow height to adjust */
+                box-shadow: none; /* Remove shadow for simplicity */
             }
             .mode-options {
                 grid-template-columns: 1fr; /* Stack cards vertically */
             }
             .mode-card {
-                padding: 25px;
+                padding: 15px;
                 min-height: unset; /* Allow height to adjust */
             }
             .prover-info { /* Changed from .user-info */
@@ -168,16 +172,16 @@
                 <!-- Calls selectMode from nzk-puzzle.js -->
                 <div class="mode-card" onclick="window.selectMode('single')">
                     <h3>🎯 Single Prover</h3>
-                    <p>Practice your skills against time</p>
-                    <p>how many style can you prove in 15sec</p>
+                    <p>Practice your skills against ⏳</p>
+                    <p>How many style can you prove in 10 sec?</p>
                 </div>
                 <div class="mode-card" onclick="window.selectMode('vs')">
                     <h3>⚔️ VS Mode</h3>
-                    <p>1 vs 1 challenge</p>
+                    <p>1 🆚 1 challenge</p>
                     <p>Host or join a game</p>
                 </div>
                 <div class="mode-card" onclick="window.selectMode('multiprover')">
-                    <h3>🌐 Multiprover</h3>
+                    <h3>👨‍👩‍👧‍👦 Multiprover</h3>
                     <p>3-500 provers</p>
                     <p>Compete with everyone</p>
                 </div>

@@ -105,22 +105,37 @@ h1 { margin: 10px 0; text-align: center; }
     100% { transform: translateX(0); }
 }
 
+/* --- Styles Preview: Global (Desktop/Large Screen) Settings --- */
 #styles-preview {
-    display: flex;
-    flex-direction: column; /* Default to column for desktop/larger screens */
-    gap: 5px;
-    margin-top: 5px;
+    display: grid; /* Use grid for horizontal layout on all screens */
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for 2x2 layout on desktop */
+    gap: 15px; /* Larger gap for desktop */
+    margin-top: 15px; /* Consistent margin */
+    padding: 10px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #3a3a3a;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+    /* Remove max-height and overflow-y here, as 2x2 should not overflow vertically */
+    /* width: auto; max-width: auto; - will be controlled by parent container and grid */
 }
 
 .style-preview-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
-    padding: 3px;
-    border: 1px solid #333;
-    border-radius: 4px;
-    background-color: #333;
+    justify-content: center; /* Center content vertically in the wrapper */
+    gap: 5px; /* Adjusted gap inside wrapper */
+    padding: 8px; /* Adjusted padding */
+    border: 1px solid #0095ff;
+    border-radius: 8px;
+    background-color: #2e2e2e;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    
+    width: auto; /* Allow items to fill their grid cell */
+    height: auto;
+    aspect-ratio: 1 / 1; /* Maintain square aspect ratio */
 }
 
 .style-preview-wrapper.proved-style {
@@ -132,8 +147,8 @@ h1 { margin: 10px 0; text-align: center; }
 .style-shape { display: grid; gap: 1px; }
 
 .style-node {
-    width: 8px;
-    height: 8px;
+    width: 15px; /* Increased size for desktop preview nodes */
+    height: 15px;
     background-color: #555;
     border-radius: 2px;
 }
@@ -142,7 +157,7 @@ h1 { margin: 10px 0; text-align: center; }
 
 .style-name {
     color: #f8f8f8;
-    font-size: 0.7em;
+    font-size: 0.9em; /* Increased font size for desktop preview names */
     font-weight: bold;
 }
 
@@ -312,11 +327,9 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #main-container {
         flex-direction: column;
         align-items: center;
-        /* ADDED: Reduce min-height on mobile to prevent excess space */
         min-height: auto; /* Allow container to shrink to content height */
     }
     body {
-        /* ADDED: Reduce min-height on body for mobile */
         min-height: auto; /* Allow body to shrink to content height */
         justify-content: flex-start; /* Align content to top on mobile */
     }
@@ -331,26 +344,16 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         margin: 10px auto;
     }
     
+    /* --- Styles Preview: Mobile/Tablet Overrides --- */
     #styles-preview {
-        /* ORIGINAL STYLES */
-        /* height: auto; */
-        /* max-height: 200px; */
-        /* overflow-y: auto; */
-        /* width: 90%; */
-        /* max-width: 250px; */
-        /* margin-bottom: 10px; */
-
-        /* NEW STYLES FOR HORIZONTAL LAYOUT */
-        display: grid; /* Changed to grid for more flexible horizontal layout */
-        /* This will create columns for your styles, each fitting its content. */
-        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* Adjust minmax(width) for style items */
-        gap: 10px; /* Adjust gap between style previews */
+        grid-template-columns: repeat(2, 1fr); /* Keep 2 columns for most mobile/tablet sizes */
+        gap: 10px; /* Slightly smaller gap than desktop */
         justify-content: center; /* Horizontally center the styles */
         flex-wrap: wrap; /* Ensure styles wrap to the next line if space runs out */
 
-        height: auto; /* Allow content to dictate height */
-        max-height: 100px; /* Optional: helpful max-height to keep it compact */
-        overflow-x: auto; /* Allow horizontal scrolling if styles don't fit */
+        height: auto;
+        max-height: 100px; /* Optional: helpful max-height to keep it compact vertically */
+        overflow-x: auto; /* Allow horizontal scrolling if items don't fit in 2 columns (e.g. very narrow) */
         overflow-y: hidden; /* Hide vertical scroll */
         
         width: 90%; /* Take full width on mobile */
@@ -359,13 +362,17 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         margin-bottom: 10px; /* Add margin below styles-preview */
     }
     .style-preview-wrapper {
-        width: 60px; /* Consistent width for each style preview item */
-        height: 60px; /* Consistent height */
-        flex-shrink: 0; /* Prevent shrinking too much */
-        flex-grow: 0; /* Prevent growing too much */
-        padding: 5px; /* Adjust padding */
-        gap: 2px; /* Adjust gap between shape and name inside wrapper */
-        justify-content: center; /* Center content vertically */
+        width: auto; /* Fill grid cell */
+        height: auto; /* Adapt to content */
+        aspect-ratio: 1 / 1; /* Maintain square */
+        padding: 5px; /* Adjusted padding */
+        gap: 2px; /* Adjusted gap inside wrapper */
+        flex-shrink: 0;
+        flex-grow: 1;
+    }
+    .style-node {
+        width: 10px; /* Revert to smaller nodes for mobile previews */
+        height: 10px;
     }
     .style-name {
         font-size: 0.7em; /* Smaller font for style names in horizontal layout */
@@ -392,6 +399,14 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         /* Calculate max-width: (7 * 25px) + (6 * 1px gap) = 175 + 6 = 181px */
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
     }
+    /* Styles Preview specific adjustments for this breakpoint */
+    #styles-preview {
+        gap: 8px; /* Slightly smaller gap */
+        max-width: 280px; /* Reduce max-width for smaller screens */
+    }
+    .style-name {
+        font-size: 0.65em; /* Even smaller font */
+    }
 }
 
 /* For screens 350px and below */
@@ -409,6 +424,14 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         /* Calculate max-width: (7 * 20px) + (6 * 1px gap) = 140 + 6 = 146px */
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
     }
+    /* Styles Preview specific adjustments for this breakpoint */
+    #styles-preview {
+        gap: 5px; /* Even smaller gap */
+        max-width: 260px; /* Reduce max-width further */
+    }
+    .style-name {
+        font-size: 0.6em; /* Smallest font */
+    }
 }
 
 /* For screens 300px and below (your newly added breakpoint) */
@@ -425,5 +448,14 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         grid-template-rows: repeat(var(--grid-rows), var(--node-size));
         /* Calculate max-width: (7 * 15px) + (6 * 1px gap) = 105 + 6 = 111px */
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
+    }
+    /* Styles Preview specific adjustments for this breakpoint */
+    #styles-preview {
+        gap: 3px;
+        max-width: 200px; /* Ensure it fits the screen, potentially making it 2 columns and very small */
+        grid-template-columns: repeat(2, 1fr); /* Force 2 columns at this very small width if needed */
+    }
+    .style-name {
+        font-size: 0.55em; /* Smallest font for extreme narrowness */
     }
 }
