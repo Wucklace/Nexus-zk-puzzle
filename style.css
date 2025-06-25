@@ -52,10 +52,11 @@ h1 { margin: 10px 0; text-align: center; }
     align-items: center; /* Center content within game-status */
 }
 
+/* Updated CSS for uniform 10x10 grid across all devices */
 #grid {
     display: grid;
-    grid-template-columns: repeat(var(--grid-cols, 15), 25px);
-    grid-template-rows: repeat(var(--grid-rows, 15), 25px);
+    grid-template-columns: repeat(10, var(--node-size, 25px));
+    grid-template-rows: repeat(10, var(--node-size, 25px));
     gap: 1px;
     padding: 5px;
     background-color: #2b2b2b;
@@ -341,18 +342,18 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 #custom-message-box.error { background-color: #dc3545; }
 #custom-message-box.info { background-color: #007bff; }
 
-/* Desktop/Large Screen Adjustments - Keep 15x15 grid but smaller nodes */
+/* Desktop/Large Screen Adjustments - Keep 10x10 grid but bigger nodes */
 @media (min-width: 769px) {
     #grid {
-        --grid-cols: 15; /* Keep 15x15 grid for desktop */
-        --grid-rows: 15;
-        --node-size: 20px; /* Smaller nodes to fit better */
+        --grid-cols: 10; 
+        --grid-rows: 10;
+        --node-size: 30px; /* Smaller nodes to fit better */
         
         grid-template-columns: repeat(var(--grid-cols), var(--node-size));
         grid-template-rows: repeat(var(--grid-rows), var(--node-size));
-        gap: 1px;
+        gap: 2px;
         
-        /* Calculate size: (15 * 20px) + (14 * 1px gap) = 300 + 14 = 314px */
+        /* Adjusted max-width to fit the grid properly */
         width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 1px));
         height: calc((var(--grid-rows) * var(--node-size)) + ((var(--grid-rows) - 1) * 1px));
     }
@@ -384,7 +385,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 30px;
+        --node-size: 28px;
         height: auto;
         width: 100%;
         aspect-ratio: 1 / 1;
@@ -399,18 +400,18 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #styles-preview {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        padding: 5px;
+        gap: 2px;
+        padding: 2px;
         height: auto;
         max-height: 100px;
         overflow-x: auto;
         overflow-y: hidden;
         width: 90%;
         max-width: 280px;
-        margin: 10px auto;
+        margin: 5px auto;
     }
     .style-preview-wrapper {
-        padding: 5px;
+        padding: 2px;
         gap: 2px;
     }
     .style-node {
@@ -418,7 +419,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         height: 10px;
     }
     .style-name {
-        font-size: 0.7em;
+        font-size: 0.5em;
     }
 
     .node { 
@@ -436,7 +437,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 28px;
+        --node-size: 25px;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
         gap: 2px;
@@ -450,44 +451,16 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     }
     
     #styles-preview {
-        gap: 8px;
+        gap: 5px;
         max-width: 220px;
     }
     .style-name {
-        font-size: 0.65em;
+        font-size: 0.5em;
     }
 }
 
 /* For screens 400px and below */
 @media (max-width: 400px) {
-    #grid {
-        --grid-cols: 10;
-        --grid-rows: 10;
-        --node-size: 25px;
-        grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
-        grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
-        gap: 2px;
-        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 2px));
-    }
-    
-    .node { 
-        width: var(--node-size); 
-        height: var(--node-size); 
-    }
-    
-    #styles-preview {
-        gap: 6px;
-        max-width: 200px;
-    }
-    .style-name {
-        font-size: 0.6em;
-    }
-}
-
-/* For screens 350px and below */
-@media (max-width: 350px) {
-    #game-control button { padding: 4px; font-size: 0.8em; }
-
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
@@ -504,11 +477,39 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     }
     
     #styles-preview {
+        gap: 4px;
+        max-width: 200px;
+    }
+    .style-name {
+        font-size: 0.5em;
+    }
+}
+
+/* For screens 350px and below */
+@media (max-width: 350px) {
+    #game-control button { padding: 4px; font-size: 0.8em; }
+
+    #grid {
+        --grid-cols: 10;
+        --grid-rows: 10;
+        --node-size: 20px;
+        grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
+        grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
+        gap: 1px;
+        max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 2px));
+    }
+    
+    .node { 
+        width: var(--node-size); 
+        height: var(--node-size); 
+    }
+    
+    #styles-preview {
         gap: 5px;
         max-width: 185px;
     }
     .style-name {
-        font-size: 0.6em;
+        font-size: 0.5em;
     }
 }
 
@@ -519,7 +520,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 20px;
+        --node-size: 18px;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
         gap: 1px;
@@ -536,6 +537,6 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         max-width: 165px;
     }
     .style-name {
-        font-size: 0.55em;
+        font-size: 0.5em;
     }
 }

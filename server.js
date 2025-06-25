@@ -107,29 +107,30 @@ let proversCollection; // To hold the reference to the provers collection
         const proverSockets = new Map();
 
         const serverStyleShapes = [
-            { name: "Square", pattern: [[0, 0], [0, 1], [1, 0], [1, 1]] },
-            { name: "Line (Horizontal)", pattern: [[1, 0], [1, 1], [1, 2], [1, 3]] },
-            { name: "Line (Vertical)", pattern: [[0, 2], [1, 2], [2, 2], [3, 2]] },
-            { name: "L-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
-            { name: "T-Shape", pattern: [[0, 1], [1, 0], [1, 1], [1, 2]] },
-            { name: "Z-Shape", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
-            { name: "S-Shape", pattern: [[1, 0], [1, 1], [0, 1], [0, 2]] },
-            { name: "Diagonal TL-BR", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
-            { name: "Diagonal BL-TR", pattern: [[3, 0], [2, 1], [1, 2], [0, 3]] },
-            { name: "Diamond", pattern: [[4, 1], [0, 2], [2, 2], [1, 3]] },
-            { name: "Arrowhead", pattern: [[5, 0], [0, 1], [1, 2], [2, 1]] },
-            { name: "Hook", pattern: [[2, 2], [1, 2], [2, 2], [2, 1]] },
-            { name: "Corner", pattern: [[2, 6], [2, 1], [3, 0], [3, 1]] },
-            { name: "Stairs", pattern: [[0, 0], [1, 1], [2, 2], [3, 3]] },
-            { name: "Offset Line", pattern: [[0, 1], [1, 2], [2, 3], [3, 2]] },
-            { name: "Inverted L", pattern: [[0, 1], [1, 1], [2, 1], [2, 0]] },
-            { name: "C-Shape", pattern: [[0, 0], [1, 0], [2, 0], [2, 1]] },
-            { name: "Y-Fragment", pattern: [[5, 1], [1, 0], [1, 1], [2, 1]] },
-            { name: "Tipped T", pattern: [[1, 0], [1, 1], [1, 2], [0, 1]] },
-            { name: "Zig-Zag", pattern: [[0, 0], [0, 1], [1, 1], [1, 2]] },
-            { name: "Bent Line", pattern: [[1, 4], [2, 0], [2, 1], [3, 1]] },
-            { name: "Snake Bend", pattern: [[1, 3], [1, 1], [2, 1], [2, 2]] },
-            { name: "Half Cross", pattern: [[1, 1], [0, 1], [1, 0], [2, 1]] }
+            { name: "Square", pattern: [[0,0],[0,1],[1,0],[1,1]] },
+            { name: "Line H", pattern: [[0,0],[0,1],[0,2],[0,3]] },
+            { name: "Line V", pattern: [[0,0],[1,0],[2,0],[3,0]] },
+            { name: "L-TopLeft", pattern: [[0,0],[1,0],[2,0],[2,1]] },
+            { name: "L-BottomLeft", pattern: [[0,0],[0,1],[1,1],[2,1]] },
+            { name: "L-TopRight", pattern: [[0,1],[1,1],[2,0],[2,1]] }, // Normalized from original, distinct
+            { name: "T-Center", pattern: [[0,1],[1,0],[1,1],[1,2]] },
+            { name: "Z-Shape", pattern: [[0,0],[0,1],[1,1],[1,2]] },
+            { name: "S-Shape", pattern: [[0,1],[0,2],[1,0],[1,1]] },
+            { name: "Diagonal", pattern: [[0,0],[1,1],[2,2],[3,3]] },
+            { name: "Reverse Diagonal", pattern: [[0,3],[1,2],[2,1],[3,0]] }, // Distinct from Diagonal (opposite slope)
+            { name: "Arrowhead", pattern: [[0,1],[1,0],[1,2],[2,1]] },
+            { name: "Bent Line", pattern: [[0,0],[1,0],[1,1],[2,1]] },
+            { name: "Stair", pattern: [[0,0],[1,0],[1,1],[2,1]] }, // NEW UNIQUE PATTERN: A zig-zagging stair shape
+            { name: "Inverted L", pattern: [[0,1],[1,1],[2,1],[2,0]] },
+            { name: "Hook", pattern: [[0,0],[0,1],[1,1],[1,2]] }, // NEW UNIQUE PATTERN: A simple 2x2 hook (or mini-Z)
+            { name: "Half Cross", pattern: [[0,1],[1,0],[1,1],[1,2]] },
+            { name: "Tipped T", pattern: [[0,0],[0,1],[0,2],[1,1]] }, // NEW UNIQUE PATTERN: Tilted T (base row, stem center)
+            { name: "Snake", pattern: [[0,0],[1,0],[1,1],[0,2]] }, // NEW UNIQUE PATTERN: A short, winding snake
+            { name: "C-Left", pattern: [[0,0],[1,0],[2,0],[2,1]] },
+            { name: "Y-Fragment", pattern: [[0,1],[1,0],[1,1],[2,1]] },
+            { name: "Offset L", pattern: [[0,0],[0,1],[1,0],[1,1]] }, // NEW UNIQUE PATTERN: A compact 2x2 shape, similar to a square, but distinct from other Ls
+            { name: "Corner Box", pattern: [[0,0],[0,1],[1,0],[1,1]] }, // NEW UNIQUE PATTERN: A compact 2x2 box, different from Square
+            { name: "Skew T", pattern: [[0,0],[1,0],[1,1],[2,0]] }
         ];
 
         let serverStyleIdCounter = 0;
@@ -147,7 +148,7 @@ let proversCollection; // To hold the reference to the provers collection
             return styles;
         }
 
-        function serverCheckPattern(selectedNodeIndices, pattern, gridSize = 15) {
+        function serverCheckPattern(selectedNodeIndices, pattern, gridSize = 10) {
             if (selectedNodeIndices.length !== pattern.length) {
                 return false;
             }

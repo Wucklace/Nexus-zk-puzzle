@@ -200,36 +200,41 @@
             font-size: 1.6em;
         }
 
+        /* Updated: 10x10 Grid Layout - Standard for all devices */
         .vs-grid {
             display: grid;
-            grid-template-columns: repeat(var(--grid-cols, 15), 25px); /* Adjusted cell size for single board */
-            grid-template-rows: repeat(var(--grid-rows, 15), 25px);
-            gap: 2px;
+            grid-template-columns: repeat(10, 1fr); /* Always 10 columns */
+            grid-template-rows: repeat(10, 1fr); /* Always 10 rows */
             background-color: #2b2b2b;
             border-radius: 8px;
             overflow: hidden;
-            width: fit-content; /* Fit content to cells */
-            height: auto;
-            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 400px; /* Maximum size for desktop */
+            aspect-ratio: 1 / 1; /* Keep square shape */
             margin: 0 auto 20px auto; /* Center grid */
             border: 2px solid #0095ff;
+            gap: 2px; /* Consistent gap */
         }
 
         .vs-grid .node {
-            width: 25px; /* Adjust node size */
-            height: 25px;
             background-color: #444;
             border: 1px solid #666;
             border-radius: 3px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 30px; /* Minimum touch-friendly size */
         }
 
         .vs-grid .node.active {
-            background-color: #444;
-            border-color: #0095ff;
+            background-color: #0095ff;
+            border-color: #00bfff;
+            box-shadow: 0 0 8px rgba(0, 149, 255, 0.6);
         }
 
-        /* Removed vs-prove-btn and vs-clear-btn styles as they are removed from HTML */
+        .vs-grid .node:hover {
+            border-color: #0095ff;
+            transform: scale(1.05);
+        }
 
         #leave-vs-game {
             background-color: #555;
@@ -292,13 +297,12 @@
             color: #28a745;
         }
 
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Responsive adjustments */
+        /* Responsive adjustments - 10x10 grid with device-optimized sizing */
         @media (max-width: 900px) {
             .vs-boards-area {
                 flex-direction: column;
@@ -308,15 +312,40 @@
                 width: 90%;
                 min-width: unset;
             }
-        }
-        @media (max-width: 600px) {
             .vs-grid {
-                grid-template-columns: repeat(var(--grid-cols, 15), 18px); /* Even smaller cells */
-                grid-template-rows: repeat(var(--grid-rows, 15), 18px);
+                max-width: 350px; /* Slightly smaller on tablets */
             }
             .vs-grid .node {
-                width: 18px;
-                height: 18px;
+                min-height: 28px; /* Adjust for tablets */
+            }
+        }
+
+        /* Mobile optimizations - smaller grid but still 10x10 */
+        @media (max-width: 600px) {
+            .vs-grid {
+                max-width: 300px; /* Smaller on mobile */
+                gap: 1px; /* Tighter gaps on mobile */
+            }
+            .vs-grid .node {
+                min-height: 25px; /* Smaller but still touch-friendly */
+                border-radius: 2px;
+            }
+            .vs-board-prover {
+                padding: 15px;
+                min-width: unset;
+            }
+            .lobby-container, .vs-game-container, .game-over-container {
+                padding: 20px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 400px) {
+            .vs-grid {
+                max-width: 280px;
+            }
+            .vs-grid .node {
+                min-height: 22px;
             }
         }
     </style>
@@ -506,7 +535,6 @@
             window.updateVsActiveCount = function(count) {
                 if (vsYourActiveCountSpan) vsYourActiveCountSpan.innerText = count;
             };
-
 
             // --- Lobby UI Event Listeners ---
             hostBtn.addEventListener('click', () => window.showLobbySubScreen(hostSettings));

@@ -12,7 +12,7 @@
         html, body {
             margin: 0; /* Remove default body margins */
             padding: 0; /* Remove default body padding */
-           /* overflow: auto; Allow scrolling if content overflows */
+            /* overflow: auto; Allow scrolling if content overflows */
         }
         body {
             /* Inherits most from style.css, but ensure centering for this specific page */
@@ -40,13 +40,13 @@
             border-radius: 15px; /* More rounded */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); /* Stronger shadow */
             text-align: center;
-            max-width: 900px;
+            max-width: 900px; /* Keep max-width for desktop */
+            width: 100%; /* Make it fluid for smaller screens too */
             max-height: 100vh;
             animation: fadeIn 0.8s ease-out; /* Add a subtle animation */
             border: 2px solid #0095ff; /* Blue border */
             box-sizing: border-box; /* Include padding and border in the element's total width and height */
-            margin-left: auto; /* Auto margins for horizontal centering if flexbox isn't enough */
-            margin-right: auto;
+            /* margin-left: auto; margin-right: auto; - Removed, as flexbox parent centers it */
         }
 
         h2 {
@@ -59,14 +59,18 @@
 
         .mode-options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid for cards */
+            /* For desktop, allow 2 or 3 columns to fit, min 280px wide */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
             gap: 30px; /* Larger gap between cards */
             margin-bottom: 30px;
+            /* ADDED: Ensure it fills available width, preventing initial overflow on mobile */
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .mode-card {
             background-color: #3a3a3a; /* Slightly lighter dark for cards */
-            padding: 5px; /* More padding */
+            padding: 20px; /* Increased padding slightly for better touch target */
             border-radius: 12px; /* Rounded corners for cards */
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
@@ -99,7 +103,7 @@
             margin-bottom: 5px;
         }
 
-        .prover-info { /* Changed from .user-info */
+        .prover-info {
             font-size: 1.2em;
             color: #aaa;
             margin-top: 25px;
@@ -108,9 +112,12 @@
             align-items: center;
             flex-wrap: wrap; /* Allow wrapping on small screens */
             gap: 15px; /* Space between elements */
+            width: 100%; /* Ensure it takes full width */
+            box-sizing: border-box; /* Include padding in width */
+            padding: 0 10px; /* Add horizontal padding to prevent overflow */
         }
 
-        .prover-info button { /* Changed from .user-info button */
+        .prover-info button {
             background-color: #dc3545; /* Red for logout */
             color: white;
             border: none;
@@ -122,7 +129,7 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
-        .prover-info button:hover { /* Changed from .user-info button:hover */
+        .prover-info button:hover {
             background-color: #c82333;
             transform: translateY(-2px);
         }
@@ -134,27 +141,65 @@
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            body {
+                padding: 5px; /* Reduce overall body padding on very small screens */
+                justify-content: flex-start; /* Align content to top on mobile to give more vertical space */
+            }
             h1 {
-                font-size: 2em;
+                font-size: 1.8em; /* Slightly smaller h1 */
+                margin-bottom: 15px;
+            }
+            h2 {
+                font-size: 1.8em; /* Smaller h2 */
                 margin-bottom: 20px;
+                padding-bottom: 10px;
             }
             .mode-container {
-                width: 90%; /* Full width on small screens */
-                max-width: none; /* Remove max-width to allow full width */
-                padding: 20px;
-                height: auto; /* Allow height to adjust */
-                box-shadow: none; /* Remove shadow for simplicity */
+                width: 100%; /* Maximize width to use available screen space */
+                max-width: none; /* Remove max-width constraint */
+                padding: 15px; /* Reduce container padding */
+                box-shadow: none; /* Remove shadow for simplicity on mobile */
+                border: none; /* Remove border for more space on mobile */
             }
             .mode-options {
                 grid-template-columns: 1fr; /* Stack cards vertically */
+                gap: 20px; /* Reduce gap between stacked cards */
+                margin-bottom: 20px;
             }
             .mode-card {
-                padding: 15px;
-                min-height: unset; /* Allow height to adjust */
+                padding: 15px; /* Reduce card padding */
+                min-height: unset; /* Allow height to adjust naturally */
             }
-            .prover-info { /* Changed from .user-info */
-                flex-direction: column;
-                gap: 10px;
+            .mode-card h3 {
+                font-size: 1.5em; /* Smaller card titles */
+                margin-bottom: 10px;
+            }
+            .mode-card p {
+                font-size: 0.95em; /* Slightly smaller text */
+            }
+            .prover-info {
+                flex-direction: column; /* Stack name and logout button */
+                gap: 10px; /* Smaller gap */
+                font-size: 1em; /* Smaller font for info */
+                padding: 0; /* Remove padding here, controlled by parent */
+            }
+            .prover-info button {
+                padding: 8px 15px; /* Smaller logout button */
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 480px) { /* Extra breakpoint for very small phones */
+            h1 { font-size: 1.6em; }
+            h2 { font-size: 1.6em; }
+            .mode-container { padding: 10px; } /* Even less padding */
+            .mode-options { gap: 15px; } /* Even less gap */
+            .mode-card { padding: 10px; } /* Even less card padding */
+            .mode-card h3 { font-size: 1.3em; }
+            .mode-card p { font-size: 0.9em; }
+            .prover-info button {
+                padding: 6px 12px;
+                font-size: 0.85em;
             }
         }
     </style>
@@ -171,13 +216,13 @@
             <div class="mode-options">
                 <!-- Calls selectMode from nzk-puzzle.js -->
                 <div class="mode-card" onclick="window.selectMode('single')">
-                    <h3>🎯 Single Prover</h3>
+                    <h3>🧑 Single Prover</h3>
                     <p>Practice your skills against ⏳</p>
                     <p>How many style can you prove in 10 sec?</p>
                 </div>
                 <div class="mode-card" onclick="window.selectMode('vs')">
                     <h3>⚔️ VS Mode</h3>
-                    <p>1 🆚 1 challenge</p>
+                    <p>🧑 🆚 🧑 challenge</p>
                     <p>Host or join a game</p>
                 </div>
                 <div class="mode-card" onclick="window.selectMode('multiprover')">
@@ -186,7 +231,7 @@
                     <p>Compete with everyone</p>
                 </div>
                 <div class="prover-info">
-                   <p>👤 <span id="current-prover">Loading...</span> | <button id="logout-btn-mode">Logout</button></p>
+                    <p>👤 <span id="current-prover">Loading...</span> | <button id="logout-btn-mode">Logout</button></p>
                 </div>
             </div>
         </div>

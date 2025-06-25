@@ -237,33 +237,40 @@
             min-width: 300px; /* Ensures grid has a minimum size */
         }
 
+        /* UPDATED: Fixed 10x10 grid for all devices */
         #multi-grid {
             display: grid;
-            grid-template-columns: repeat(var(--grid-cols, 15), 25px); /* Same grid size as VS mode for consistency */
-            grid-template-rows: repeat(var(--grid-rows, 15), 25px);
-            gap: 2px;
+            grid-template-columns: repeat(10, 1fr); /* Always 10 columns */
+            grid-template-rows: repeat(10, 1fr); /* Always 10 rows */
+            gap: 3px; /* Slightly larger gap for better touch experience */
             background-color: #2b2b2b;
             border-radius: 10px;
             overflow: hidden;
-            width: fit-content; /* Fit content to cells */
-            height: auto;
-            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 500px; /* Maximum size on desktop */
+            aspect-ratio: 1 / 1; /* Perfect square */
             margin: 0 auto;
             border: 2px solid #0095ff;
             box-shadow: 0 0 20px rgba(0, 149, 255, 0.5);
         }
 
+        /* UPDATED: Responsive node sizes - bigger on desktop, smaller on mobile */
         #multi-grid .node {
-            width: 25px;
-            height: 25px;
             background-color: #444;
             border: 1px solid #666;
             border-radius: 3px;
             cursor: pointer;
+            min-height: 25px; /* Minimum touch target size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
+        
         #multi-grid .node.active {
             background-color: #444;
             border-color: #0095ff;
+            box-shadow: 0 0 8px rgba(0, 149, 255, 0.6);
         }
 
         .multi-controls {
@@ -394,7 +401,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Responsive adjustments */
+        /* UPDATED: Responsive adjustments with optimized gaps and sizes */
         @media (max-width: 900px) {
             .multi-game-area {
                 flex-direction: column;
@@ -406,15 +413,43 @@
             #multi-grid-container {
                 width: 100%;
             }
-        }
-        @media (max-width: 600px) {
+            /* Medium screens: good balance */
             #multi-grid {
-                grid-template-columns: repeat(var(--grid-cols, 15), 18px); /* Even smaller cells */
-                grid-template-rows: repeat(var(--grid-rows, 15), 18px);
+                max-width: 400px;
+                gap: 2px;
             }
+        }
+
+        /* UPDATED: Mobile-first responsive design */
+        @media (max-width: 600px) {
+            /* Smaller grid on mobile for better touch experience */
+            #multi-grid {
+                max-width: 320px;
+                gap: 2px; /* Smaller gap on mobile */
+            }
+            
+            /* Ensure minimum touch target size */
             #multi-grid .node {
-                width: 18px;
-                height: 18px;
+                min-height: 28px; /* Slightly larger minimum for better touch */
+            }
+            
+            /* Adjust info bar for mobile */
+            .multi-info-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .multi-info-bar p {
+                font-size: 1em;
+            }
+        }
+
+        /* UPDATED: Large desktop optimization */
+        @media (min-width: 1200px) {
+            #multi-grid {
+                max-width: 600px; /* Larger grid on big screens */
+                gap: 4px; /* More space between nodes */
             }
         }
     </style>
@@ -557,6 +592,10 @@
                 console.log("[multi.html] Token/provername missing. nzk-puzzle.js will redirect.");
                 return;
             }
+
+            // UPDATED: Set gridSize to 10 for multiprover mode
+            window.GRID_SIZE = 10;
+            console.log("[multi.html] Grid size set to:", window.GRID_SIZE);
 
             // --- UI Element References ---
             const multiproverLobbyScreen = document.getElementById('multiprover-lobby-screen');
@@ -730,4 +769,4 @@
         });
     </script>
 </body>
-</html>
+</html>            
