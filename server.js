@@ -97,39 +97,38 @@ let proversCollection; // To hold the reference to the provers collection
             });
         };
 
-        // --- GAME ROOM & STYLE LOGIC (Your existing GameRoom class and helpers) ---
-        // These are global variables and functions that depend on collection, but not directly.
-        // If they were methods of a class that relied on 'this.proversCollection', they'd be fine.
-        // As they are top-level functions, we assume they access the global proversCollection.
+        // --- GAME ROOM & STYLE LOGIC ---
 
         // Game Room Management
         const gameRooms = new Map();
         const proverSockets = new Map();
 
+        // --- FINAL, CORRECTED, AND UNIQUE STYLESHAPES ARRAY (24 Patterns) ---
+        // This array must match the one in nzk-puzzle.js exactly.
         const serverStyleShapes = [
             { name: "Square", pattern: [[0,0],[0,1],[1,0],[1,1]] },
             { name: "Line H", pattern: [[0,0],[0,1],[0,2],[0,3]] },
             { name: "Line V", pattern: [[0,0],[1,0],[2,0],[3,0]] },
             { name: "L-TopLeft", pattern: [[0,0],[1,0],[2,0],[2,1]] },
             { name: "L-BottomLeft", pattern: [[0,0],[0,1],[1,1],[2,1]] },
-            { name: "L-TopRight", pattern: [[0,1],[1,1],[2,0],[2,1]] }, // Normalized from original, distinct
+            { name: "L-TopRight", pattern: [[0,1],[1,1],[2,0],[2,1]] },
             { name: "T-Center", pattern: [[0,1],[1,0],[1,1],[1,2]] },
             { name: "Z-Shape", pattern: [[0,0],[0,1],[1,1],[1,2]] },
             { name: "S-Shape", pattern: [[0,1],[0,2],[1,0],[1,1]] },
             { name: "Diagonal", pattern: [[0,0],[1,1],[2,2],[3,3]] },
-            { name: "Reverse Diagonal", pattern: [[0,3],[1,2],[2,1],[3,0]] }, // Distinct from Diagonal (opposite slope)
+            { name: "Reverse Diagonal", pattern: [[0,3],[1,2],[2,1],[3,0]] },
             { name: "Arrowhead", pattern: [[0,1],[1,0],[1,2],[2,1]] },
             { name: "Bent Line", pattern: [[0,0],[1,0],[1,1],[2,1]] },
-            { name: "Stair", pattern: [[0,0],[1,0],[1,1],[2,1]] }, // NEW UNIQUE PATTERN: A zig-zagging stair shape
+            { name: "Stair", pattern: [[0,0],[1,0],[1,1],[2,1]] }, 
             { name: "Inverted L", pattern: [[0,1],[1,1],[2,1],[2,0]] },
-            { name: "Hook", pattern: [[0,0],[0,1],[1,1],[1,2]] }, // NEW UNIQUE PATTERN: A simple 2x2 hook (or mini-Z)
+            { name: "Hook", pattern: [[0,0],[0,1],[1,1],[1,2]] }, 
             { name: "Half Cross", pattern: [[0,1],[1,0],[1,1],[1,2]] },
-            { name: "Tipped T", pattern: [[0,0],[0,1],[0,2],[1,1]] }, // NEW UNIQUE PATTERN: Tilted T (base row, stem center)
-            { name: "Snake", pattern: [[0,0],[1,0],[1,1],[0,2]] }, // NEW UNIQUE PATTERN: A short, winding snake
+            { name: "Tipped T", pattern: [[0,0],[0,1],[0,2],[1,1]] },
+            { name: "Snake", pattern: [[0,0],[1,0],[1,1],[0,2]] },
             { name: "C-Left", pattern: [[0,0],[1,0],[2,0],[2,1]] },
             { name: "Y-Fragment", pattern: [[0,1],[1,0],[1,1],[2,1]] },
-            { name: "Offset L", pattern: [[0,0],[0,1],[1,0],[1,1]] }, // NEW UNIQUE PATTERN: A compact 2x2 shape, similar to a square, but distinct from other Ls
-            { name: "Corner Box", pattern: [[0,0],[0,1],[1,0],[1,1]] }, // NEW UNIQUE PATTERN: A compact 2x2 box, different from Square
+            { name: "Offset L", pattern: [[0,0],[0,1],[1,0],[1,1]] }, 
+            { name: "Corner Box", pattern: [[0,0],[0,1],[1,0],[1,1]] },
             { name: "Skew T", pattern: [[0,0],[1,0],[1,1],[2,0]] }
         ];
 
@@ -137,30 +136,35 @@ let proversCollection; // To hold the reference to the provers collection
 
         function generateServerRandomStyles(count) {
             const styles = [];
-            const availableShapes = [...serverStyleShapes];
+            const availableShapes = [...serverStyleShapes]; // Use a fresh copy for selection
             for (let i = 0; i < count; i++) {
-                if (availableShapes.length === 0) break;
+                if (availableShapes.length === 0) {
+                    console.warn("Server: Not enough unique patterns to generate the requested count. Re-using patterns.");
+                    availableShapes.push(...serverStyleShapes); // Replenish if run out
+                    if (availableShapes.length === 0) break; // Should not happen if serverStyleShapes is not empty
+                }
                 const randomIndex = Math.floor(Math.random() * availableShapes.length);
                 const selectedPattern = { ...availableShapes.splice(randomIndex, 1)[0] };
-                selectedPattern.id = `style_${serverStyleIdCounter++}_${Date.now()}`;
+                selectedPattern.id = `style_${serverStyleIdCounter++}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`; // Ensure unique IDs
                 styles.push(selectedPattern);
             }
             return styles;
         }
 
-        function serverCheckPattern(selectedNodeIndices, pattern, gridSize = 10) {
+        // MODIFIED: Default gridSize for server-side pattern checking is now 10
+        function serverCheckPattern(selectedNodeIndices, pattern, gridSize = 10) { 
             if (selectedNodeIndices.length !== pattern.length) {
                 return false;
             }
             if (selectedNodeIndices.length === 0) return false;
             const selectedCoords = selectedNodeIndices.map(index => [
-                Math.floor(index / gridSize),
-                index % gridSize
+                Math.floor(index / gridSize), 
+                index % gridSize              
             ]);
             const minRow = Math.min(...selectedCoords.map(c => c[0]));
             const minCol = Math.min(...selectedCoords.map(c => c[1]));
             const normalizedSelected = selectedCoords.map(c => [c[0] - minRow, c[1] - minCol])
-                                                     .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+                                                      .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
             const normalizedPattern = [...pattern].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
             for (let i = 0; i < normalizedPattern.length; i++) {
                 if (normalizedSelected[i][0] !== normalizedPattern[i][0] || normalizedSelected[i][1] !== normalizedPattern[i][1]) {
@@ -186,6 +190,7 @@ let proversCollection; // To hold the reference to the provers collection
                 this.challengeCount = 0;
                 this.createdAt = Date.now();
                 this.gameInterval = null;
+                this.styleRefreshInterval = null; // ADDED: New interval for style refreshes
                 this.lastGameUpdate = Date.now();
             }
 
@@ -204,6 +209,7 @@ let proversCollection; // To hold the reference to the provers collection
                     correctProofs: 0,
                     wrongProofs: 0,
                     lastProofTime: null,
+                    provedStyleIds: new Set() // ADDED: Track proved styles per prover for client-side feedback
                 });
                 return true;
             }
@@ -220,6 +226,10 @@ let proversCollection; // To hold the reference to the provers collection
                     if (this.gameInterval) {
                         clearInterval(this.gameInterval);
                         this.gameInterval = null;
+                    }
+                    if (this.styleRefreshInterval) { // ADDED: Clear style refresh interval
+                        clearInterval(this.styleRefreshInterval);
+                        this.styleRefreshInterval = null;
                     }
                     this.gameState = 'empty';
                     console.log(`Room ${this.id} is now empty.`);
@@ -245,7 +255,8 @@ let proversCollection; // To hold the reference to the provers collection
                 this.gameState = 'active';
                 this.startTime = Date.now();
                 this.endTime = this.startTime + (this.timer * 60 * 1000);
-                this.initializeChallenges();
+                
+                this.initializeChallenges(); // Initial challenges
                 console.log(`Game started in room ${this.id}. Mode: ${this.mode}`);
 
                 this.gameInterval = setInterval(() => {
@@ -259,20 +270,42 @@ let proversCollection; // To hold the reference to the provers collection
                         this.broadcastGameState();
                     }
                 }, 1000);
+
+                // ADDED: New interval for refreshing active challenges every 15 seconds
+                this.styleRefreshInterval = setInterval(() => {
+                    if (this.gameState === 'active' && !this.isGameFinished()) {
+                        this.refreshChallenges();
+                        this.broadcastGameState(); // Broadcast the new challenges
+                        console.log(`Room ${this.id}: Challenges refreshed.`);
+                    }
+                }, 15 * 1000); // 15 seconds
+                
                 return true;
             }
+            
+            // ADDED: Function to refresh ALL active challenges
+            refreshChallenges() {
+                this.activeChallenges = generateServerRandomStyles(8); // Always generate 8 new styles
+                // Clear proved styles for all provers in the room as new challenges are presented
+                this.provers.forEach(prover => {
+                    prover.provedStyleIds.clear();
+                });
+            }
 
+            // MODIFIED: Generate 8 initial challenges for multiplayer modes
             initializeChallenges() {
-                const numChallenges = this.mode === 'vs' || this.mode === 'multiprover' ? 5 : 5;
-                this.activeChallenges = generateServerRandomStyles(numChallenges);
+                // For VS and Multiprover, always start with 8 challenges
+                this.activeChallenges = generateServerRandomStyles(8); 
                 console.log(`Initialized ${this.activeChallenges.length} challenges for room ${this.id}.`);
             }
 
             findAndRemoveProvedStyle(selectedNodeIndices) {
                 for (let i = 0; i < this.activeChallenges.length; i++) {
                     const style = this.activeChallenges[i];
-                    if (serverCheckPattern(selectedNodeIndices, style.pattern, 15)) {
-                        this.activeChallenges.splice(i, 1);
+                    // Pass the room's gridSize (which is implicitly 10 now, due to client change)
+                    if (serverCheckPattern(selectedNodeIndices, style.pattern, 10)) { 
+                        // IMPORTANT: Only remove if it was actually proved
+                        this.activeChallenges.splice(i, 1); // Remove the proved style
                         console.log(`Style '${style.name}' proved and removed from active challenges in room ${this.id}.`);
                         return style;
                     }
@@ -280,6 +313,7 @@ let proversCollection; // To hold the reference to the provers collection
                 return null;
             }
 
+            // MODIFIED: submitProof logic to NOT add new styles immediately
             submitProof(socketId, selectedNodes) {
                 const prover = this.provers.get(socketId);
                 if (!prover || this.gameState !== 'active') {
@@ -292,18 +326,15 @@ let proversCollection; // To hold the reference to the provers collection
                     prover.score += 10;
                     prover.correctProofs += 1;
                     prover.lastProofTime = Date.now();
+                    prover.provedStyleIds.add(provedStyle.id); // Track proved style ID
 
-                    const newStyle = generateServerRandomStyles(1)[0];
-                    if (newStyle) {
-                        this.activeChallenges.push(newStyle);
-                        console.log(`Generated new challenge for room ${this.id}: ${newStyle.name}`);
-                    } else {
-                        console.warn(`Server: Could not generate a new style for room ${this.id}.`);
-                    }
+                    // *** THIS IS THE CRUCIAL CHANGE: NO IMMEDIATE STYLE REPLACEMENT ***
+                    // New styles will now ONLY appear during the 15-second refresh cycle.
+                    // The `activeChallenges` array will simply shrink as styles are proved.
 
                     return {
                         isCorrect: true,
-                        message: `Proof of ${provedStyle.name} successful! +10 points!`,
+                        message: `Proof of ${provedStyle.name}✅Proof Successful! +10 points!`,
                         provedStyleId: provedStyle.id,
                         selectedNodes
                     };
@@ -313,7 +344,7 @@ let proversCollection; // To hold the reference to the provers collection
                     prover.lastProofTime = Date.now();
                     return {
                         isCorrect: false,
-                        message: 'Incorrect proof. -5 points!',
+                        message: ' ❌Proof Fail. -5 points!',
                         selectedNodes
                     };
                 }
@@ -351,6 +382,10 @@ let proversCollection; // To hold the reference to the provers collection
                     clearInterval(this.gameInterval);
                     this.gameInterval = null;
                 }
+                if (this.styleRefreshInterval) { // ADDED: Clear style refresh interval
+                    clearInterval(this.styleRefreshInterval);
+                    this.styleRefreshInterval = null;
+                }
                 const finalResults = this.getLeaderboard();
                 console.log(`Game ${this.id} finished. Final Results:`, finalResults);
 
@@ -374,10 +409,24 @@ let proversCollection; // To hold the reference to the provers collection
             broadcastGameState() {
                 const leaderboard = this.getLeaderboard();
                 const timeRemaining = this.getTimeRemaining();
-                io.to(this.id).emit('game-state-update', {
-                    timeRemaining,
-                    leaderboard,
-                    activeChallenges: this.activeChallenges
+                
+                // For each prover, tailor the activeChallenges to include their proved styles
+                this.provers.forEach((prover, socketId) => {
+                    const proverSocket = io.sockets.sockets.get(socketId);
+                    if (proverSocket) {
+                        // Create a copy of activeChallenges and mark proved ones
+                        const challengesToSend = this.activeChallenges.map(challenge => ({
+                            ...challenge,
+                            isProved: prover.provedStyleIds.has(challenge.id)
+                        }));
+
+                        proverSocket.emit('game-state-update', {
+                            timeRemaining,
+                            leaderboard,
+                            activeChallenges: challengesToSend, // Send tailored challenges
+                            proverScore: prover.score // Send prover's individual score
+                        });
+                    }
                 });
                 this.lastGameUpdate = Date.now();
             }
@@ -727,121 +776,112 @@ let proversCollection; // To hold the reference to the provers collection
                         }
                     }
                     io.emit('rooms-updated');
-                } else {
-                    console.warn(`Attempted to leave non-existent room: ${roomId}`);
                 }
             });
 
-            socket.on('toggle-ready', (data) => {
-                const { roomId, ready } = data;
-                const room = gameRooms.get(roomId);
-                
-                if (room && room.gameState === 'waiting') {
-                    room.setProverReady(socket.id, ready);
-                    
-                    let allProversRequiredForStartReady = false;
-                    if (room.mode === 'vs') {
-                        allProversRequiredForStartReady = room.provers.size === 2 && room.allProversReady();
-                    } else if (room.mode === 'multiprover') {
-                        allProversRequiredForStartReady = room.provers.size >= 3 && room.allProversReady();
-                    }
-
-                    io.to(roomId).emit('prover-ready-update', {
-                        provername: socket.prover.provername,
-                        ready: ready,
-                        leaderboard: room.getLeaderboard(),
-                        allReady: allProversRequiredForStartReady
-                    });
-                    console.log(`Prover ${socket.prover.provername} in room ${roomId} is now ${ready ? 'ready' : 'not ready'}. All required ready: ${allProversRequiredForStartReady}`);
-                } else {
-                    socket.emit('error', { message: 'Cannot change ready status in current room state.' });
-                }
-            });
-
-            socket.on('start-game', (data) => {
-                const { roomId } = data;
-                const room = gameRooms.get(roomId);
-                
-                if (!room) {
-                    return socket.emit('error', { message: 'Room not found.' });
-                }
-                if (socket.id !== room.hostSocketId) {
-                    return socket.emit('error', { message: 'Only the host can start the game.' });
-                }
-                if (room.gameState === 'active') {
-                    return socket.emit('error', { message: 'Game already active.' });
-                }
-                
-                let canStart = false;
-                if (room.mode === 'vs') {
-                    canStart = room.provers.size === 2 && room.allProversReady();
-                    if (!canStart) {
-                        return socket.emit('error', { message: 'VS Mode requires exactly 2 ready provers to start.' });
-                    }
-                } else if (room.mode === 'multiprover') {
-                    canStart = room.provers.size >= 3 && room.allProversReady();
-                    if (!canStart) {
-                        return socket.emit('error', { message: 'Multiprover requires at least 3 ready provers to start.' });
-                    }
-                } else {
-                     return socket.emit('error', { message: 'Invalid game mode for starting.' });
-                }
-
-
-                if (room.startGame()) {
-                    io.to(roomId).emit('game-started', {
-                        timeRemaining: room.getTimeRemaining(),
-                        activeChallenges: room.activeChallenges,
-                        initialLeaderboard: room.getLeaderboard()
-                    });
-                    console.log(`Host ${socket.prover.provername} started game in room ${roomId}.`);
-                } else {
-                    socket.emit('error', { message: 'Failed to start game. Check room state.' });
-                }
-            });
-
+            // Handle submitted proofs from clients
             socket.on('submit-proof', (data) => {
                 const { roomId, selectedNodes } = data;
                 const room = gameRooms.get(roomId);
 
-                if (room && room.gameState === 'active') {
-                    const result = room.submitProof(socket.id, selectedNodes);
-                    socket.emit('proof-submitted', {
-                        provername: socket.prover.provername,
-                        isCorrect: result.isCorrect,
-                        message: result.message,
-                        provedStyleId: result.provedStyleId,
-                        selectedNodes: result.selectedNodes
-                    });
-                } else {
-                    socket.emit('error', { message: 'Cannot submit proof. Game not active or room not found.' });
+                if (!room) {
+                    socket.emit('error', { message: 'Room not found for proof submission.' });
+                    return;
+                }
+
+                const result = room.submitProof(socket.id, selectedNodes);
+                socket.emit('proof-result', result); // Send result back to the submitting prover
+                room.broadcastGameState(); // Broadcast updated state to all provers in the room
+            });
+
+            socket.on('set-ready', (data) => {
+                const { roomId, ready } = data;
+                const room = gameRooms.get(roomId);
+                if (room) {
+                    room.setProverReady(socket.id, ready);
+                    room.broadcastGameState(); // Update all clients on ready status
+                    if (room.allProversReady() && room.provers.size >= 1 && room.gameState === 'waiting') { // Require at least 1 prover to start game
+                        room.startGame(); // Host will emit this, others will just set ready
+                        room.broadcastGameState(); // Initial broadcast of active game state
+                    }
                 }
             });
 
-            socket.on('get-rooms', () => {
-                const roomsList = Array.from(gameRooms.values())
-                    .filter(room => room.gameState === 'waiting')
-                    .map(room => ({
-                        id: room.id,
-                        hostProvername: room.hostProvername,
-                        mode: room.mode,
-                        proverCount: room.provers.size,
-                        maxProvers: room.maxProvers,
-                        timer: room.timer,
-                        allReady: room.allProversReady()
-                    }));
-                socket.emit('rooms-list', roomsList);
-                console.log(`Prover ${socket.prover.provername} requested rooms list. Sent ${roomsList.length} rooms.`);
+            // Host can start game if enough players are ready
+            socket.on('host-start-game', (data) => {
+                const { roomId } = data;
+                const room = gameRooms.get(roomId);
+                if (room && socket.id === room.hostSocketId && room.allProversReady()) {
+                    if (room.provers.size < 1) { // Changed from 2 to 1 for starting a multiplayer game
+                         socket.emit('error', { message: 'Need at least 1 prover to start a multiplayer game.' });
+                         return;
+                    }
+                    room.startGame();
+                    room.broadcastGameState();
+                } else if (!room) {
+                    socket.emit('error', { message: 'Room not found.' });
+                }
+                 else if (socket.id !== room.hostSocketId) {
+                    socket.emit('error', { message: 'Only the host can start the game.' });
+                } else if (!room.allProversReady()) {
+                    socket.emit('error', { message: 'All provers must be ready to start the game.' });
+                }
+            });
+
+            // Host can end game
+            socket.on('host-end-game', (data) => {
+                const { roomId } = data;
+                const room = gameRooms.get(roomId);
+                if (room && socket.id === room.hostSocketId && room.gameState === 'active') {
+                    const finalResults = room.finishGame();
+                    io.to(roomId).emit('game-ended', { results: finalResults, message: 'Host ended the game.' });
+                    gameRooms.delete(roomId);
+                    io.emit('rooms-updated');
+                }
+            });
+
+            // Host can reset room
+            socket.on('host-reset-room', (data) => {
+                const { roomId } = data;
+                const room = gameRooms.get(roomId);
+                if (room && socket.id === room.hostSocketId) {
+                    // Clear existing intervals if any
+                    if (room.gameInterval) clearInterval(room.gameInterval);
+                    if (room.styleRefreshInterval) clearInterval(room.styleRefreshInterval); // ADDED: Clear style refresh interval
+
+                    // Reset room state
+                    room.gameState = 'waiting';
+                    room.startTime = null;
+                    room.endTime = null;
+                    room.activeChallenges = [];
+                    room.challengeCount = 0;
+                    room.provers.forEach(prover => {
+                        prover.score = 0;
+                        prover.ready = false;
+                        prover.correctProofs = 0;
+                        prover.wrongProofs = 0;
+                        prover.lastProofTime = null;
+                        prover.provedStyleIds.clear(); // Clear proved styles
+                    });
+                    room.broadcastGameState(); // Broadcast reset state
+                    io.emit('rooms-updated'); // Update room list
+                    socket.emit('room-reset-success', { roomId });
+                    console.log(`Room ${roomId} reset by host.`);
+                } else if (!room) {
+                    socket.emit('error', { message: 'Room not found.' });
+                } else if (socket.id !== room.hostSocketId) {
+                    socket.emit('error', { message: 'Only the host can reset the room.' });
+                }
             });
         });
 
-        // Start the server only after MongoDB connection is established
+        // Start listening after MongoDB connection
         server.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
 
-    } catch (error) {
-        console.error('Failed to connect to MongoDB and start server:', error);
-        process.exit(1); // Exit if essential services cannot start
+    } catch (err) {
+        console.error('Failed to connect to MongoDB', err);
+        process.exit(1); // Exit if DB connection fails
     }
-})(); // Immediately invoke the async function
+})();

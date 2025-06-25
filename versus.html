@@ -217,23 +217,17 @@
         }
 
         .vs-grid .node {
+            width: var(--node-size, 25px);
+            height: var(--node-size, 25px);
             background-color: #444;
             border: 1px solid #666;
             border-radius: 3px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            min-height: 30px; /* Minimum touch-friendly size */
         }
 
         .vs-grid .node.active {
-            background-color: #0095ff;
-            border-color: #00bfff;
-            box-shadow: 0 0 8px rgba(0, 149, 255, 0.6);
-        }
-
-        .vs-grid .node:hover {
-            border-color: #0095ff;
-            transform: scale(1.05);
+            background-color: #444;
+            border-color: #6666;
         }
 
         #leave-vs-game {
@@ -264,9 +258,9 @@
         .styles-preview .style-name {
             background-color: #333;
             color: white;
-            padding: 5px 10px;
+            padding: 5px 5px;
             border-radius: 5px;
-            font-size: 0.9em;
+            font-size: 0.5em;
             font-weight: bold;
         }
 

@@ -385,7 +385,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 28px;
+        --node-size: 30px;
         height: auto;
         width: 100%;
         aspect-ratio: 1 / 1;
@@ -399,7 +399,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     
     #styles-preview {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 2fr 1fr; /* Two columns for 2x2 layout */
         gap: 2px;
         padding: 2px;
         height: auto;
@@ -415,8 +415,8 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         gap: 2px;
     }
     .style-node {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
     }
     .style-name {
         font-size: 0.5em;
@@ -437,7 +437,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 25px;
+        --node-size: 28px;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
         gap: 2px;
@@ -451,8 +451,9 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     }
     
     #styles-preview {
-        gap: 5px;
-        max-width: 220px;
+        gap: 2px;
+        max-width: 200px;
+        grid-template-columns: 2fr 1fr;
     }
     .style-name {
         font-size: 0.5em;
@@ -464,7 +465,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 22px;
+        --node-size: 26px;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
         gap: 2px;
@@ -477,8 +478,9 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     }
     
     #styles-preview {
-        gap: 4px;
+        gap: 2px;
         max-width: 200px;
+        grid-template-columns: 2fr 1fr;
     }
     .style-name {
         font-size: 0.5em;
@@ -492,7 +494,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 20px;
+        --node-size: 23px;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
         gap: 1px;
@@ -507,6 +509,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #styles-preview {
         gap: 5px;
         max-width: 185px;
+        grid-template-columns: 2fr 1fr; /* Two columns for 2x2 layout */
     }
     .style-name {
         font-size: 0.5em;
@@ -520,7 +523,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 18px;
+        --node-size: 20px;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
         gap: 1px;
@@ -535,6 +538,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #styles-preview {
         gap: 3px;
         max-width: 165px;
+        grid-template-columns: 2fr 1fr; /* Two columns for 2x2 layout */
     }
     .style-name {
         font-size: 0.5em;

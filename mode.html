@@ -12,7 +12,8 @@
         html, body {
             margin: 0; /* Remove default body margins */
             padding: 0; /* Remove default body padding */
-            /* overflow: auto; Allow scrolling if content overflows */
+            box-sizing: border-box; /* Ensure padding and borders are included in element's total width and height */
+            height: 100%; /* Full height for centering */
         }
         body {
             /* Inherits most from style.css, but ensure centering for this specific page */
@@ -46,7 +47,8 @@
             animation: fadeIn 0.8s ease-out; /* Add a subtle animation */
             border: 2px solid #0095ff; /* Blue border */
             box-sizing: border-box; /* Include padding and border in the element's total width and height */
-            /* margin-left: auto; margin-right: auto; - Removed, as flexbox parent centers it */
+            margin-left: auto; 
+            margin-right: auto; 
         }
 
         h2 {

@@ -360,26 +360,26 @@ const styleShapes = [
     { name: "Line V", pattern: [[0,0],[1,0],[2,0],[3,0]] },
     { name: "L-TopLeft", pattern: [[0,0],[1,0],[2,0],[2,1]] },
     { name: "L-BottomLeft", pattern: [[0,0],[0,1],[1,1],[2,1]] },
-    { name: "L-TopRight", pattern: [[0,1],[1,1],[2,0],[2,1]] }, // Normalized from original, distinct
+    { name: "L-TopRight", pattern: [[0,1],[1,1],[2,0],[2,1]] },
     { name: "T-Center", pattern: [[0,1],[1,0],[1,1],[1,2]] },
     { name: "Z-Shape", pattern: [[0,0],[0,1],[1,1],[1,2]] },
     { name: "S-Shape", pattern: [[0,1],[0,2],[1,0],[1,1]] },
     { name: "Diagonal", pattern: [[0,0],[1,1],[2,2],[3,3]] },
-    { name: "Reverse Diagonal", pattern: [[0,3],[1,2],[2,1],[3,0]] }, // Distinct from Diagonal (opposite slope)
+    { name: "Reverse Diagonal", pattern: [[0,3],[1,2],[2,1],[3,0]] },
     { name: "Arrowhead", pattern: [[0,1],[1,0],[1,2],[2,1]] },
     { name: "Bent Line", pattern: [[0,0],[1,0],[1,1],[2,1]] },
-    { name: "Stair", pattern: [[0,0],[1,0],[1,1],[2,1]] }, // NEW UNIQUE PATTERN: A zig-zagging stair shape
+    { name: "Stair", pattern: [[0,0],[1,0],[1,1],[2,1]] }, 
     { name: "Inverted L", pattern: [[0,1],[1,1],[2,1],[2,0]] },
-    { name: "Hook", pattern: [[0,0],[0,1],[1,1],[1,2]] }, // NEW UNIQUE PATTERN: A simple 2x2 hook (or mini-Z)
+    { name: "Hook", pattern: [[0,0],[0,1],[1,1],[1,2]] }, 
     { name: "Half Cross", pattern: [[0,1],[1,0],[1,1],[1,2]] },
-    { name: "Tipped T", pattern: [[0,0],[0,1],[0,2],[1,1]] }, // NEW UNIQUE PATTERN: Tilted T (base row, stem center)
-    { name: "Snake", pattern: [[0,0],[1,0],[1,1],[0,2]] }, // NEW UNIQUE PATTERN: A short, winding snake
+    { name: "Tipped T", pattern: [[0,0],[0,1],[0,2],[1,1]] },
+    { name: "Snake", pattern: [[0,0],[1,0],[1,1],[0,2]] },
     { name: "C-Left", pattern: [[0,0],[1,0],[2,0],[2,1]] },
     { name: "Y-Fragment", pattern: [[0,1],[1,0],[1,1],[2,1]] },
-    { name: "Offset L", pattern: [[0,0],[0,1],[1,0],[1,1]] }, // NEW UNIQUE PATTERN: A compact 2x2 shape, similar to a square, but distinct from other Ls
-    { name: "Corner Box", pattern: [[0,0],[0,1],[1,0],[1,1]] }, // NEW UNIQUE PATTERN: A compact 2x2 box, different from Square
+    { name: "Offset L", pattern: [[0,0],[0,1],[1,0],[1,1]] }, 
+    { name: "Corner Box", pattern: [[0,0],[0,1],[1,0],[1,1]] },
     { name: "Skew T", pattern: [[0,0],[1,0],[1,1],[2,0]] }
-];
+]
 
 /**
  * Generates random styles for client-side use (e.g., Single Prover mode).
