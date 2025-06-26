@@ -1,12 +1,18 @@
-// --- Global Constants and Variables for Style Refresh (confirm these are at the top of nzk-puzzle.js) ---
+// --- Global Constants and Variables for Style Refresh ---
 const SINGLE_PROVER_PREVIEW_REFRESH_RATE_MS = 10 * 1000; // 10 seconds for full style refresh
-const SINGLE_PROVER_NUM_STYLES_TO_DISPLAY = 4; // // The number of styles to show initially and on full refresh
+const SINGLE_PROVER_NUM_STYLES_TO_DISPLAY = 4; // The number of styles to show initially and on full refresh
 
 let singleProverStyleRefreshInterval = null; // To hold the setInterval ID
 
 // This will be used to dynamically set the base URL for API calls
 const BASE_URL = window.location.origin; // This will dynamically get your app's URL on Render.com
 
+/**
+ * Displays a custom message box with a given message, type, and duration.
+ * @param {string} message - The message to display.
+ * @param {string} type - 'info', 'success', or 'error' for styling.
+ * @param {number} duration - How long the message should be visible in milliseconds.
+ */
 function showMessageBox(message, type = 'info', duration = 3000) {
     let msgBox = document.getElementById('custom-message-box');
     if (!msgBox) {
@@ -43,7 +49,7 @@ const singleSuccessEl = document.getElementById('success');
 const singleFailEl = document.getElementById('fail');
 const singleScoreEl = document.getElementById('score');
 const singleTimerEl = document.getElementById('timer');
-const singleAthScoreEl = document = document.getElementById('ath-score'); // Corrected typo here
+const singleAthScoreEl = document.getElementById('ath-score'); // Corrected typo here
 const singleStartBtn = document.getElementById('start-btn');
 const singleEndBtn = document.getElementById('end-btn');
 const singleLeaderboardDiv = document.getElementById('leaderboard');
@@ -60,6 +66,8 @@ const vsOpponentScoreSpan = document.getElementById('vs-opponent-score');
 const vsOpponentStatusDiv = document.getElementById('vs-opponent-status');
 const vsOpponentProvernameSpan = document.getElementById('vs-opponent-provername');
 const vsYourProvernameSpan = document.getElementById('vs-your-provername');
+const vsReadyBtn = document.getElementById('set-ready-btn'); // VS Ready button
+const vsStartGameBtn = document.getElementById('start-vs-game'); // VS Start Game button
 
 
 // Elements for multi.html (Multiprover Mode)
@@ -72,6 +80,8 @@ const multiProverCountSpan = document.getElementById('multi-prover-count');
 const multiLeaderSpan = document.getElementById('multi-leader');
 const multiProverListDiv = document.getElementById('multi-prover-list');
 const multiActiveCountSpan = document.getElementById('multi-active-count');
+const multiReadyBtn = document.getElementById('multi-set-ready-btn'); // Multiprover Ready button
+const multiStartGameBtn = document.getElementById('multi-start-game'); // Multiprover Start Game button
 
 
 // === Global Game State Variables ===
@@ -92,8 +102,6 @@ let currentSingleProverScore = 0; // Separate score for single prover
 let currentSingleProverStyles = []; // Stores the styles currently active for the single prover game
 
 // Uniform 10x10 grid system for all devices
-// Simple and consistent across all screen sizes
-// Multiprover/VS State (managed by server, client reflects it)
 let activeCells = new Set(); // Stores indices of currently active (selected) cells on the local grid
 const gridSize = 10; // Consistent grid size for all modes (10x10)
 
@@ -115,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async () => {
             console.log('[nzk-puzzle.js][Logout] button clicked.');
             try {
-                await fetch('${BASE_URL}/api/logout', {
+                await fetch(`${BASE_URL}/api/logout`, { // Corrected: Using BASE_URL variable
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -159,6 +167,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modeSelectionScreen && window.showScreen) {
             window.showScreen(modeSelectionScreen);
         }
+    }
+
+    // --- Attach Event Listeners for Ready Buttons ---
+    if (vsReadyBtn) {
+        vsReadyBtn.addEventListener('click', () => {
+            const currentReadyStatus = vsReadyBtn.dataset.ready === 'true'; // Get current state
+            window.emitToggleReady(!currentReadyStatus); // Emit the opposite state
+        });
+        console.log('[nzk-puzzle.js][Init] VS Ready button event listener attached.');
+    }
+
+    if (multiReadyBtn) {
+        multiReadyBtn.addEventListener('click', () => {
+            const currentReadyStatus = multiReadyBtn.dataset.ready === 'true'; // Get current state
+            window.emitToggleReady(!currentReadyStatus); // Emit the opposite state
+        });
+        console.log('[nzk-puzzle.js][Init] Multiprover Ready button event listener attached.');
     }
 });
 
@@ -225,9 +250,9 @@ async function verifyAuthentication(currentPage) {
 async function fetchAthScore(provername) {
     if (!provername) return;
     try {
-const response = await fetch(`${BASE_URL}/api/prover/${provername}`, { // Corrected: Using BASE_URL variable
-    headers: { 'Authorization': `Bearer ${token}` }
-});
+        const response = await fetch(`${BASE_URL}/api/prover/${provername}`, { 
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         const data = await response.json();
         if (data.success) {
             athScore = data.athScore || 0;
@@ -248,13 +273,13 @@ const response = await fetch(`${BASE_URL}/api/prover/${provername}`, { // Correc
 // Global function to save score (primarily for single prover)
 async function saveScore(score) {
     try {
-        const response = await fetch(`${BASE_URL}/api/submit-score`, { // Corrected: Using BASE_URL variable
+        const response = await fetch(`${BASE_URL}/api/submit-score`, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`  // Ensure token is sent for authentication
+                'Authorization': `Bearer ${token}`  
             },
-            body: JSON.stringify({ provername, score }) // Ensure correct data is sent
+            body: JSON.stringify({ provername, score }) 
         });
         const data = await response.json();
         if (data.success) {
@@ -279,7 +304,7 @@ async function updateLeaderboard() {
     if (!singleLeaderboardDiv) return;
 
     try {
-        const response = await fetch(`${BASE_URL}/api/leaderboard`); // Corrected: Using BASE_URL variable
+        const response = await fetch(`${BASE_URL}/api/leaderboard`); 
         const data = await response.json();
 
         if (data.success) {
@@ -430,7 +455,7 @@ function checkPattern(selectedNodeIndices, patternCoords, localGridSize = gridSi
     const minCol = Math.min(...selectedRelativeCoords.map(c => c[1]));
 
     const normalizedSelected = selectedRelativeCoords.map(c => [c[0] - minRow, c[1] - minCol])
-                                                   .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+                                                     .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
 
     const normalizedPattern = [...patternCoords].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
 
@@ -452,7 +477,7 @@ function buildGrid(gridContainer, mode) {
         console.error(`[buildGrid] Grid container not found for mode: ${mode}`);
         return;
     }
-     
+      
     // Always set to 10x10
     gridContainer.style.setProperty('--grid-cols', gridSize);
     gridContainer.style.setProperty('--grid-rows', gridSize);
@@ -538,22 +563,15 @@ function toggleCell(nodeElement, index, mode) {
                 // Visual feedback for success
                 activeNodeElements.forEach(node => node.classList.add('proof-success'));
 
-                // Remove the proved style and add a new one
+                // Remove the proved style. No new style immediately in single prover either.
                 currentSingleProverStyles = currentSingleProverStyles.filter(s => s.id !== provedStyle.id);
-                /**const newStyle = generateRandomStylesForClient(1)[0];  The lines to generate and add a newStyle are REMOVED here
-                if (newStyle) {
-                    currentSingleProverStyles.push(newStyle);   because proved styles should be subtracted, not replaced immediately.
-                } else {
-                    console.warn("[Single Prover] Could not generate a new style. Running out of unique styles?");
-                }**/
 
                 buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
                 console.log(`[Single Prover] Score: ${currentSingleProverScore}`);
 
             } else {
                 failCount++;
-                // currentSingleProverScore = Math.max(0, currentSingleProverScore - 5); // REMOVED: No penalty for single prover fail
-                showMessageBox('❌Fail Proof', 'error'); // Message updated, no score deduction mentioned
+                showMessageBox('❌Fail Proof', 'error'); 
 
                 // Visual feedback for failure
                 activeNodeElements.forEach(node => node.classList.add('proof-fail'));
@@ -574,11 +592,12 @@ function toggleCell(nodeElement, index, mode) {
 
         } else if (mode === 'vs-prover-own' || mode === 'multiprover') {
             // For multiplayer modes, attempt to submit proof to server
-            // The server will validate and send back game-state-update / proof-submitted events
             if (socket && socket.connected && currentRoomId) {
                 // Client-side check for a match *before* sending to server to reduce unnecessary network traffic
                 let clientProved = false;
-                for (const style of styleShapes) { // Check against base styleShapes for client-side validation
+                // This client-side check should ideally be against the currently active challenges received from the server.
+                // For simplicity, we are checking against ALL possible styleShapes. This is okay as server does final validation.
+                for (const style of styleShapes) { 
                     if (checkPattern(selectedNodeIndices, style.pattern, gridSize)) {
                         clientProved = true;
                         break;
@@ -586,7 +605,6 @@ function toggleCell(nodeElement, index, mode) {
                 }
 
                 if (clientProved) {
-                    // This will trigger the server-side validation and scoring
                     console.log(`[${mode}] Emitting submit-proof to server:`, selectedNodeIndices);
                     socket.emit('submit-proof', { roomId: currentRoomId, selectedNodes: selectedNodeIndices });
                     // Clear local selection immediately after emitting, feedback handled by server response
@@ -637,8 +655,8 @@ function toggleCell(nodeElement, index, mode) {
 /**
  * Builds and updates the style preview container.
  * @param {HTMLElement} container - The DOM element to build previews inside.
- * @param {Array<Object>} styles - An array of style objects ({ id, name, pattern }).
- * @param {Set<string>} [provedStyleIdsSet=new Set()] - Set of IDs of styles that have been proved (for visual fading).
+ * @param {Array<Object>} styles - An array of style objects ({ id, name, pattern, isProved? }).
+ * @param {Set<string>} [provedStyleIdsSet=new Set()] - Set of IDs of styles that have been proved (for visual fading in single-prover).
  */
 function buildStylePreview(container, styles, provedStyleIdsSet = new Set()) {
     if (!container) return;
@@ -647,7 +665,9 @@ function buildStylePreview(container, styles, provedStyleIdsSet = new Set()) {
     styles.forEach(style => {
         const previewWrapper = document.createElement('div');
         previewWrapper.className = 'style-preview-wrapper';
-        if (provedStyleIdsSet.has(style.id)) {
+
+        // Fix: Check for 'isProved' flag (from server for multiplayer) or 'provedStyleIdsSet' (for single player)
+        if (style.isProved || provedStyleIdsSet.has(style.id)) {
             previewWrapper.classList.add('proved-style');
         }
 
@@ -681,7 +701,6 @@ function buildStylePreview(container, styles, provedStyleIdsSet = new Set()) {
     });
     console.log(`[buildStylePreview] Styles preview built for container: ${container.id}, styles count: ${styles.length}`);
 }
-
 
 // === Game Mode Selection Functions (Exposed Globally) ===
 window.selectMode = function(mode) {
@@ -748,9 +767,6 @@ function initializeSingleProverGame() {
 
     buildGrid(singleGrid, 'single');
 
-    //currentSingleProverStyles = generateRandomStylesForClient(5); // 5 styles for single prover
-    //buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
-
     resetSingleProverGame();
     console.log('[nzk-puzzle.js][SingleProver] Game Initialized.');
 }
@@ -785,8 +801,8 @@ function resetSingleProverGame() {
     if (singleTimerEl) singleTimerEl.innerText = timeLeft;
     stopTimerSingleProver(); // Ensure timer is stopped on reset
 
-    // ADDED: Stop the style refresh loop on game reset/end
-    stopSingleProverStyleRefreshLoop(); // This is important!
+    // Stop the style refresh loop on game reset/end
+    stopSingleProverStyleRefreshLoop(); 
 
     // Hide final results display
     if (singleFinalResultsDisplay) singleFinalResultsDisplay.classList.add('hidden');
@@ -807,30 +823,25 @@ function startTimerSingleProver() {
     if (timerInterval) {
         clearInterval(timerInterval);
     }
-     
-
+      
     timerInterval = setInterval(() => {
-        // This check should be sufficient, but re-ordering for clarity
-        // If gameActive somehow became false externally (e.g., from endGame call)
         if (!gameActive) {
-            stopTimerSingleProver(); // Ensure interval is cleared
-            if (singleTimerEl) singleTimerEl.innerText = '0'; // Force display to 0
+            stopTimerSingleProver(); 
+            if (singleTimerEl) singleTimerEl.innerText = '0'; 
             console.log('[Single Prover] Timer found game inactive, stopping.');
-            return; // Exit this iteration
+            return; 
         }
 
         timeLeft--;
 
         if (singleTimerEl) singleTimerEl.innerText = timeLeft;
-
         
-
         if (timeLeft <= 0) {
             console.log('[Single Prover] Timer reached 0. Ending game.');
-            stopTimerSingleProver(); // Stop it immediately
-            endGame(); // Call the globally exposed endGame function
-            if (singleTimerEl) singleTimerEl.innerText = '0'; // Ensure it shows 0
-            return; // Exit interval callback immediately after ending game
+            stopTimerSingleProver(); 
+            endGame(); 
+            if (singleTimerEl) singleTimerEl.innerText = '0'; 
+            return; 
         }
     }, 1000);
     console.log('[nzk-puzzle.js][SingleProver] Timer started.');
@@ -838,7 +849,7 @@ function startTimerSingleProver() {
 
 /**
  * Starts the continuous refresh loop for Single Prover style previews.
- * his function will completely replace all displayed styles at a set interval.
+ * This function will completely replace all displayed styles at a set interval.
  */
 function startSingleProverStyleRefreshLoop() {
     // Clear any existing interval to prevent multiple loops running concurrently
@@ -853,10 +864,10 @@ function startSingleProverStyleRefreshLoop() {
 
     // Set up the interval for subsequent full refreshes
     singleProverStyleRefreshInterval = setInterval(() => {
-        currentSingleProverStyles = generateRandomStylesForClient(SINGLE_PROVER_NUM_STYLES_TO_DISPLAY);
+        currentSingleProverStyles = generateRandomStylesForClient(SINGLE_PROVER_NUM_STYLS_TO_DISPLAY);
         buildStylePreview(singleStylePreviewContainer, currentSingleProverStyles);
         console.log(`[Single Prover] Full style refresh (10s timer) with ${currentSingleProverStyles.length} styles.`);
-    },  SINGLE_PROVER_PREVIEW_REFRESH_RATE_MS);
+    }, SINGLE_PROVER_PREVIEW_REFRESH_RATE_MS);
     
 }
 
@@ -932,7 +943,7 @@ window.endGame = async function() { // Exposed globally for index.html
         showMessageBox(`Score: ${currentSingleProverScore}. score.`, 'info');
     }
 
-    // Display final results on the dedicated game over screen
+// Display final results on the dedicated game over screen
     if (singleFinalResultsDisplay) {
         singleFinalResultsDisplay.innerHTML = `
             <p>Your Final Score: <strong>${currentSingleProverScore}</strong></p>
@@ -946,8 +957,6 @@ window.endGame = async function() { // Exposed globally for index.html
     if (gameOverScreenSingle) gameOverScreenSingle.classList.add('active');
 
     updateLeaderboard(); // Update global leaderboard display
-    // Do NOT call resetSingleProverGame immediately here. Let the user click "Play Again"
-    // to trigger reset and new game init, otherwise it resets before they see results.
 }
 
 function clearGridSelection(gridContainer) {
@@ -994,7 +1003,7 @@ function connectToMultiproverServer(mode) {
 
     currentGameMode = mode; // Ensure global mode is set
 
-    socket = io(BASE_URL, { // Corrected: Using BASE_URL variable
+    socket = io(BASE_URL, { 
         auth: {
             token: token,
             provername: provername
@@ -1049,7 +1058,7 @@ function connectToMultiproverServer(mode) {
              // For planned disconnects (e.g., leave-room), just redirect to mode selection
              setTimeout(() => {
                 window.location.href = 'mode.html';
-             }, 1000);
+            }, 1000);
         }
         currentRoomId = null;
         isHost = false;
@@ -1081,7 +1090,7 @@ function connectToMultiproverServer(mode) {
     socket.on('prover-joined', handleProverJoined);
     socket.on('prover-left', handleProverLeft);
     socket.on('prover-ready-update', handleProverReadyUpdate);
-    socket.on('rooms-list', handleRoomsList); // Not currently used by UI but useful for debugging
+    socket.on('rooms-list', handleRoomsList); 
     socket.on('rooms-updated', handleRoomsUpdated);
 
     // --- In-Game Events (Shared between VS and Multiprover) ---
@@ -1130,7 +1139,7 @@ window.emitLeaveRoom = function() {
 window.emitToggleReady = function(readyStatus) {
     console.log(`[nzk-puzzle.js][Emit] emitToggleReady called (ready: ${readyStatus}). Current room: ${currentRoomId}. Socket connected: ${socket && socket.connected}`);
     if (currentRoomId && socket && socket.connected) {
-        socket.emit('toggle-ready', { roomId: currentRoomId, ready: readyStatus });
+        socket.emit('set-ready', { roomId: currentRoomId, ready: readyStatus }); // Changed 'toggle-ready' to 'set-ready'
         showMessageBox(`You are now ${readyStatus ? 'READY' : 'NOT READY'}.`, 'info', 1500);
     } else {
         console.warn('[nzk-puzzle.js][Emit] Cannot toggle ready, not in a room.');
@@ -1141,7 +1150,7 @@ window.emitToggleReady = function(readyStatus) {
 window.emitStartGame = function() {
     console.log(`[nzk-puzzle.js][Emit] emitStartGame called. Current room: ${currentRoomId}. Is host: ${isHost}. Socket connected: ${socket && socket.connected}`);
     if (isHost && currentRoomId && socket && socket.connected) {
-        socket.emit('start-game', { roomId: currentRoomId });
+        socket.emit('host-start-game', { roomId: currentRoomId }); // Changed 'start-game' to 'host-start-game'
         showMessageBox('Starting game...', 'info', 1500);
     } else {
         showMessageBox('Only the host can start the game, or not in a room.', 'error', 3000);
@@ -1149,7 +1158,7 @@ window.emitStartGame = function() {
 };
 
 
-// --- Socket Event Handlers ---
+// --- Socket Event Handlers (Called by socket.on) ---
 function handleRoomCreated(data) {
     currentRoomId = data.roomId;
     isHost = data.isHost;
@@ -1164,8 +1173,7 @@ function handleRoomCreated(data) {
         if (currentRoomCodeSpan) currentRoomCodeSpan.textContent = data.roomId;
         const hostControlsDiv = document.getElementById('host-controls');
         if (hostControlsDiv) hostControlsDiv.classList.remove('hidden');
-        const startVsGameBtn = document.getElementById('start-vs-game');
-        if (startVsGameBtn) startVsGameBtn.disabled = true; // Wait for opponent
+        // Start button enabled/disabled by updateProverList logic below
         updateProverList(data.roomInfo.leaderboard, 'vs');
     } else if (currentGameMode === 'multiprover' && window.showMultiproverSubScreen) {
         window.showMultiproverSubScreen(document.getElementById('multi-waiting-room'));
@@ -1175,9 +1183,7 @@ function handleRoomCreated(data) {
         if (multiCurrentRoomCodeSpan) multiCurrentRoomCodeSpan.textContent = data.roomId;
         const multiHostControlsDiv = document.getElementById('multi-host-controls');
         if (multiHostControlsDiv) multiHostControlsDiv.classList.remove('hidden');
-        const multiStartGameBtn = document.getElementById('multi-start-game');
-        if (multiStartGameBtn) multiStartGameBtn.disabled = true; // Wait for provers
-        // Pass the correct leaderboard from data.roomInfo, defaulting to empty array
+        // Start button enabled/disabled by updateProverList logic below
         updateProverList(data.roomInfo.leaderboard || [], 'multiprover-waiting');
     }
 }
@@ -1197,8 +1203,7 @@ function handleRoomJoined(data) {
             if (isHost) hostControlsDiv.classList.remove('hidden');
             else hostControlsDiv.classList.add('hidden');
         }
-        const startVsGameBtn = document.getElementById('start-vs-game');
-        if (startVsGameBtn) startVsGameBtn.disabled = true; // Still wait for host to start or for provers
+        // Start button enabled/disabled by updateProverList logic below
         updateProverList(data.roomInfo.leaderboard, 'vs');
     } else if (currentGameMode === 'multiprover' && window.showMultiproverSubScreen) {
         window.showMultiproverSubScreen(document.getElementById('multi-waiting-room'));
@@ -1209,9 +1214,7 @@ function handleRoomJoined(data) {
             if (isHost) multiHostControlsDiv.classList.remove('hidden');
             else multiHostControlsDiv.classList.add('hidden');
         }
-        const multiStartGameBtn = document.getElementById('multi-start-game');
-        if (multiStartGameBtn) multiStartGameBtn.disabled = true;
-        // Pass the correct leaderboard from data.roomInfo, defaulting to empty array
+        // Start button enabled/disabled by updateProverList logic below
         updateProverList(data.roomInfo.leaderboard || [], 'multiprover-waiting');
     }
 }
@@ -1220,20 +1223,17 @@ function handleProverJoined(data) {
     console.log(`[nzk-puzzle.js][SocketEvent] Prover ${data.provername} joined room. Total: ${data.proverCount}`);
     showMessageBox(`${data.provername} joined the room.`, 'info', 2000);
 
-    if (currentGameMode === 'vs') {
-        updateProverList(data.leaderboard, 'vs');
-        if (isHost) {
-            const startVsGameBtn = document.getElementById('start-vs-game');
-            if (startVsGameBtn) {
-                const readyProvers = data.leaderboard.filter(p => p.ready).length;
-                startVsGameBtn.disabled = !(readyProvers === 2 && data.leaderboard.length === 2);
-            }
+    // Update the prover list, which handles start button enablement/disablement based on readiness
+    // Server now sends `leaderboard` with `ready` status on `prover-joined`
+    updateProverList(data.leaderboard, currentGameMode === 'vs' ? 'vs' : 'multiprover-waiting');
+
+    if (currentGameMode === 'vs' && isHost) {
+        if (data.leaderboard.length < 2) {
+            showMessageBox(`Waiting for opponent...`, 'info', 3000);
         }
-    } else if (currentGameMode === 'multiprover') {
-        updateProverList(data.leaderboard, 'multiprover-waiting');
-        if (isHost) {
-            const multiStartGameBtn = document.getElementById('multi-start-game');
-            if (multiStartGameBtn) multiStartGameBtn.disabled = (data.proverCount < 3 || !data.allReady); // Minimum 3 provers AND all ready
+    } else if (currentGameMode === 'multiprover' && isHost) {
+        if (data.leaderboard.length < 3) {
+            showMessageBox(`Waiting for more provers...`, 'info', 3000);
         }
     }
 }
@@ -1242,31 +1242,20 @@ function handleProverLeft(data) {
     console.log(`[nzk-puzzle.js][SocketEvent] Prover ${data.provername} left. Prover count: ${data.proverCount}`);
     showMessageBox(`${data.provername} left the room.`, 'info', 2000);
 
+    // Update the prover list, which handles start button enablement/disablement based on readiness
+    updateProverList(data.leaderboard, currentGameMode === 'vs' ? 'vs' : 'multiprover-waiting');
+
     if (currentGameMode === 'vs') {
-        updateProverList(data.leaderboard, 'vs');
-        if (isHost) {
-            const startVsGameBtn = document.getElementById('start-vs-game');
-            if (startVsGameBtn) {
-                const readyProvers = data.leaderboard.filter(p => p.ready).length;
-                startVsGameBtn.disabled = !(readyProvers === 2 && data.leaderboard.length === 2);
-                if (data.proverCount < 2) {
-                    showMessageBox(`Opponent disconnected. Waiting for another prover...`, 'info', 3000);
-                }
-            }
-        } else if (data.proverCount === 0 && currentRoomId) { // Non-host and room is empty (host left)
+        if (isHost && data.leaderboard.length < 2) {
+            showMessageBox(`Opponent disconnected. Waiting for another prover...`, 'info', 3000);
+        } else if (!isHost && data.proverCount === 0 && currentRoomId) { 
             showMessageBox('Host left or opponent disconnected. Returning to lobby.', 'info', 3000);
             window.emitLeaveRoom(); // Clean up if in a room
         }
     } else if (currentGameMode === 'multiprover') {
-        updateProverList(data.leaderboard, 'multiprover-waiting');
-        if (isHost) {
-            const multiStartGameBtn = document.getElementById('multi-start-game');
-            if (multiStartGameBtn) multiStartGameBtn.disabled = (data.proverCount < 3 || !data.allReady); // Re-evaluate start button
-            if (data.proverCount === 0) { // If host left alone
-                showMessageBox('All other provers left. Returning to lobby.', 'info', 3000);
-                window.emitLeaveRoom();
-            }
-        } else if (data.proverCount === 0 && currentRoomId) { // Non-host and room empty
+        if (isHost && data.leaderboard.length < 3) { // If less than 3 remain, prompt for more
+             showMessageBox('Fewer than 3 provers remain. Waiting for more provers...', 'info', 3000);
+        } else if (!isHost && data.proverCount === 0 && currentRoomId) { 
             showMessageBox('Host left or room became empty. Returning to lobby.', 'info', 3000);
             window.emitLeaveRoom();
         }
@@ -1277,22 +1266,9 @@ function handleProverReadyUpdate(data) {
     console.log(`[nzk-puzzle.js][SocketEvent] Prover ${data.provername} ready status: ${data.ready}`);
     showMessageBox(`${data.provername} is ${data.ready ? 'ready' : 'not ready'}.`, 'info', 1500);
 
-    if (currentGameMode === 'vs') {
-        updateProverList(data.leaderboard, 'vs');
-        if (isHost) {
-            const startVsGameBtn = document.getElementById('start-vs-game');
-            if (startVsGameBtn) {
-                const readyProvers = data.leaderboard.filter(p => p.ready).length;
-                startVsGameBtn.disabled = !(readyProvers === 2 && data.leaderboard.length === 2); // Host can start if exactly 2 provers AND both are ready
-            }
-        }
-    } else if (currentGameMode === 'multiprover') {
-        updateProverList(data.leaderboard, 'multiprover-waiting');
-        if (isHost) { // Only host cares about overall readiness for start button
-            const multiStartGameBtn = document.getElementById('multi-start-game');
-            if (multiStartGameBtn) multiStartGameBtn.disabled = (data.leaderboard.length < 3 || !data.allReady); // Need min 3 AND all ready
-        }
-    }
+    // This event now carries the full leaderboard with updated ready statuses,
+    // so we just pass it to updateProverList.
+    updateProverList(data.leaderboard, currentGameMode === 'vs' ? 'vs' : 'multiprover-waiting');
 }
 
 function handleRoomsList(rooms) {
@@ -1304,16 +1280,16 @@ function handleRoomsList(rooms) {
 function handleRoomsUpdated() {
     console.log('[nzk-puzzle.js][SocketEvent] Rooms updated event received. Re-fetching rooms list.');
     if (socket && socket.connected && (currentGameMode === 'vs' || currentGameMode === 'multiprover')) {
-        socket.emit('get-rooms'); // Re-fetch rooms if a lobby UI needs to update
+        socket.emit('get-rooms'); 
     }
 }
 
 function handleGameStarted(data) {
     console.log(`[nzk-puzzle.js][SocketEvent] Game started in room ${currentRoomId}! Initial active styles:`, data.activeChallenges);
     showMessageBox('Game Started! Good luck!', 'success', 2500);
-    gameActive = true; // Set game active flag for current client
-    activeCells.clear(); // Ensure selection is clear at game start
-    provedStyleIds.clear(); // Clear proved styles from previous games
+    gameActive = true; 
+    activeCells.clear(); 
+    provedStyleIds.clear(); 
 
     if (currentGameMode === 'vs' && window.showScreen) {
         window.showScreen(document.getElementById('vs-game-screen'));
@@ -1323,45 +1299,46 @@ function handleGameStarted(data) {
         if (vsYourActiveCountSpan) vsYourActiveCountSpan.textContent = '0';
 
         if (vsActiveStylesPreviewDiv) buildStylePreview(vsActiveStylesPreviewDiv, data.activeChallenges, provedStyleIds);
-        if (data.initialLeaderboard) updateVsScoreboard(data.initialLeaderboard);
+        if (data.leaderboard) updateVsScoreboard(data.leaderboard); // Server sends 'leaderboard', not 'initialLeaderboard'
         if (vsOpponentStatusDiv) vsOpponentStatusDiv.textContent = 'Waiting for opponent\'s move...';
         // Set your prover name
         if (vsYourProvernameSpan) vsYourProvernameSpan.textContent = provername;
         // Set opponent prover name if exists
-        const opponentProver = data.initialLeaderboard.find(p => p.provername !== provername);
+        const opponentProver = data.leaderboard.find(p => p.provername !== provername);
         if(vsOpponentProvernameSpan) vsOpponentProvernameSpan.textContent = opponentProver ? opponentProver.provername : '-';
 
     } else if (currentGameMode === 'multiprover' && window.showScreen) {
         window.showScreen(document.getElementById('multiprover-game-screen'));
         if (multiGridDiv) buildGrid(multiGridDiv, 'multiprover');
         if (multiScoreSpan) multiScoreSpan.textContent = '0';
-        if (multiProverCountSpan) multiProverCountSpan.textContent = data.initialLeaderboard.length;
+        if (multiProverCountSpan) multiProverCountSpan.textContent = data.leaderboard.length; // Use data.leaderboard.length
         if (multiProvernameSpan) multiProvernameSpan.textContent = provername;
         // Ensure multiActiveCountSpan is reset
         if (multiActiveCountSpan) multiActiveCountSpan.innerText = '0';
 
-
         if (multiStylesPreviewDiv) buildStylePreview(multiStylesPreviewDiv, data.activeChallenges, provedStyleIds);
-        if (data.initialLeaderboard) updateMultiproverScoreboard(data.initialLeaderboard);
-        if (multiLeaderSpan && data.initialLeaderboard.length > 0) multiLeaderSpan.textContent = data.initialLeaderboard[0].provername;
+        if (data.leaderboard) updateMultiproverScoreboard(data.leaderboard); // Server sends 'leaderboard'
+        if (multiLeaderSpan && data.leaderboard.length > 0) multiLeaderSpan.textContent = data.leaderboard[0].provername;
     }
 }
 
 function handleGameStateUpdate(data) {
     if (!gameActive) {
         console.log('[Game State Update] Received update but game is not active.');
-        return; // Only process if game is active
+        return; 
     }
 
     if (currentGameMode === 'vs') {
         if (document.getElementById('vs-timer')) document.getElementById('vs-timer').textContent = data.timeRemaining;
         if (data.leaderboard) updateVsScoreboard(data.leaderboard);
-        if (data.activeChallenges) buildStylePreview(vsActiveStylesPreviewDiv, data.activeChallenges, provedStyleIds);
+        // Important: Pass provedStyleIds for single-prover visual, but relies on server's isProved for multiplayer
+        if (vsActiveStylesPreviewDiv) buildStylePreview(vsActiveStylesPreviewDiv, data.activeChallenges); 
     } else if (currentGameMode === 'multiprover') {
         if (multiTimerSpan) multiTimerSpan.textContent = data.timeRemaining;
         if (multiProverCountSpan) multiProverCountSpan.textContent = data.leaderboard.length;
         if (data.leaderboard) updateMultiproverScoreboard(data.leaderboard);
-        if (multiStylesPreviewDiv) buildStylePreview(multiStylesPreviewDiv, data.activeChallenges, provedStyleIds);
+        // Important: Pass provedStyleIds for single-prover visual, but relies on server's isProved for multiplayer
+        if (multiStylesPreviewDiv) buildStylePreview(multiStylesPreviewDiv, data.activeChallenges); 
         if (multiLeaderSpan && data.leaderboard.length > 0) multiLeaderSpan.textContent = data.leaderboard[0].provername;
     }
 }
@@ -1369,15 +1346,18 @@ function handleGameStateUpdate(data) {
 function handleProofSubmitted(data) {
     console.log(`[Socket.IO] Proof submitted by ${data.provername}. Correct: ${data.isCorrect}. Message: ${data.message}`);
     
-    // Add the proved style ID to the set if correct
-    if (data.isCorrect && data.provedStyleId) {
+    // Server now marks isProved directly on the style object in activeChallenges.
+    // So, client does not need to add to provedStyleIds here for multiplayer;
+    // it will be reflected in the next game-state-update.
+    // However, keeping for single-prover client-side logic.
+    if (currentGameMode === 'single' && data.isCorrect && data.provedStyleId) {
         provedStyleIds.add(data.provedStyleId);
     }
 
     // Apply visual feedback (fast flash) only to the cells that were part of the proof
     const currentGrid = (currentGameMode === 'vs') ? vsYourGridDiv : multiGridDiv;
     if (currentGrid && data.provername === provername) { // Only apply feedback to your own grid for your actions
-        const selectedNodesToFlash = data.selectedNodes; // Server should ideally send back the exact nodes that formed the proof
+        const selectedNodesToFlash = data.selectedNodes; 
         const flashNodes = selectedNodesToFlash.map(index => currentGrid.querySelector(`.node[data-index="${index}"]`));
 
         if (flashNodes.length > 0) {
@@ -1388,10 +1368,10 @@ function handleProofSubmitted(data) {
                 flashNodes.forEach(node => {
                     if (node) node.classList.remove('proof-success', 'proof-fail');
                 });
-            }, 200); // Fast flash duration
+            }, 200); 
         }
         // Clear local selection after visual feedback
-        clearGridSelection(currentGrid); // This clears all currently active cells on the *local* grid
+        clearGridSelection(currentGrid); 
         // Update active count display
         if (currentGameMode === 'vs' && vsYourActiveCountSpan) {
             vsYourActiveCountSpan.innerText = 0;
@@ -1403,7 +1383,7 @@ function handleProofSubmitted(data) {
     // Update opponent status message in VS mode
     if (currentGameMode === 'vs' && vsOpponentStatusDiv) {
         if (data.provername === provername) {
-             showMessageBox(data.message, data.isCorrect ? 'success' : 'error');
+            showMessageBox(data.message, data.isCorrect ? 'success' : 'error');
         } else {
             vsOpponentStatusDiv.textContent = `${data.provername} proved ${data.isCorrect ? 'correctly!' : 'incorrectly!'}`;
             setTimeout(() => {
@@ -1415,7 +1395,6 @@ function handleProofSubmitted(data) {
     }
 
     // Styles and scores are updated via `game-state-update` which is a periodic broadcast from the server.
-    // The `game-state-update` will contain the new set of `activeChallenges` and the updated `leaderboard`.
 }
 
 async function handleGameEnded(data) {
@@ -1440,7 +1419,6 @@ async function handleGameEnded(data) {
     } else if (yourResult) {
         showMessageBox(`Your score: ${yourResult.score}. Not a new ATH.`, 'info', 3000);
     }
-
 
     // Display final results screen (delegated to HTML's embedded script)
     if (currentGameMode === 'vs' && window.showScreen && document.getElementById('game-over-screen')) {
@@ -1474,8 +1452,6 @@ async function handleGameEnded(data) {
             multiFinalResultsDiv.innerHTML = html;
         }
     }
-    // No explicit leave-room call here as the server handles room cleanup after game ends.
-    // The "Play Again" or "Back to Modes" buttons will handle new connections/redirections.
 }
 
 
@@ -1491,7 +1467,7 @@ function updateProverList(provers, type) {
     let targetListDiv;
     let proverCountSpan;
     let setReadyBtn;
-    let readyStatusSpan;
+    let readyStatusSpan; // Refers to the span that shows 'READY' or 'NOT READY' status for *current prover*
 
     if (type === 'vs') {
         targetListDiv = document.getElementById('prover-list');
@@ -1512,14 +1488,13 @@ function updateProverList(provers, type) {
         return;
     }
 
-    // Use actualProvers.length here
     proverCountSpan.textContent = actualProvers.length;
     targetListDiv.innerHTML = ''; // Clear existing list
 
-    let allProversReady = true; // For host's "Start Game" button logic
+    let allProversReady = true; 
     let yourReadyStatus = false;
 
-    actualProvers.forEach(prover => { // Iterate over actualProvers
+    actualProvers.forEach(prover => { 
         const proverItem = document.createElement('div');
         proverItem.classList.add('prover-item');
         if (prover.provername === provername) {
@@ -1542,26 +1517,28 @@ function updateProverList(provers, type) {
     if (setReadyBtn) {
         setReadyBtn.dataset.ready = String(yourReadyStatus);
         setReadyBtn.textContent = yourReadyStatus ? 'Unready' : 'Ready';
+        setReadyBtn.classList.toggle('ready-active', yourReadyStatus); // Add class for styling if ready
     }
     // Update the ready status text display
     if (readyStatusSpan) {
         readyStatusSpan.textContent = yourReadyStatus ? 'READY' : 'NOT READY';
+        readyStatusSpan.classList.toggle('ready-active', yourReadyStatus); // Add class for styling if ready
     }
 
 
     // Enable/disable "Start Game" button for host based on readiness and count
     if (isHost) {
         if (type === 'vs') {
-            const startVsGameBtn = document.getElementById('start-vs-game');
-            if (startVsGameBtn) {
+            const startBtn = document.getElementById('start-vs-game');
+            if (startBtn) {
                 // VS mode requires exactly 2 provers AND both ready
-                startVsGameBtn.disabled = !(actualProvers.length === 2 && allProversReady);
+                startBtn.disabled = !(actualProvers.length === 2 && allProversReady);
             }
         } else if (type === 'multiprover-waiting') {
-            const multiStartGameBtn = document.getElementById('multi-start-game');
-            if (multiStartGameBtn) {
+            const startBtn = document.getElementById('multi-start-game');
+            if (startBtn) {
                 // Multiprover mode requires minimum 3 provers AND all ready
-                multiStartGameBtn.disabled = !(actualProvers.length >= 3 && allProversReady);
+                startBtn.disabled = !(actualProvers.length >= 3 && allProversReady);
             }
         }
     }
