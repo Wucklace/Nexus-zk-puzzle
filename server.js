@@ -823,7 +823,22 @@ let proversCollection; // To hold the reference to the provers collection
                     // Auto-start game if all conditions are met
                     if (room.allProversReady() && room.provers.size >= minPlayersForStart && room.gameState === 'waiting') {
                         room.startGame(); // Start the game if all ready and min players met
-                        room.broadcastGameState(); // Initial broadcast of active game state
+                        // Initial broadcast of active game state, with challenges tailored per prover
+                        room.provers.forEach((prover, proverSocketId) => {
+                            const proverSocket = io.sockets.sockets.get(proverSocketId);
+                            if (proverSocket) {
+                                const challengesToSend = room.activeChallenges.map(challenge => ({
+                                    ...challenge,
+                                    isProved: prover.provedStyleIds.has(challenge.id)
+                                }));
+                                proverSocket.emit('game-started', {
+                                    timeRemaining: room.getTimeRemaining(),
+                                    activeChallenges: challengesToSend,
+                                    leaderboard: room.getLeaderboard(),
+                                    proverScore: prover.score
+                                });
+                            }
+                        });
                     }
                 } else {
                     socket.emit('error', { message: 'Cannot change ready status in current room state.' });
@@ -867,13 +882,21 @@ let proversCollection; // To hold the reference to the provers collection
 
                 if (room.startGame()) {
                     // Send initial game state to all clients in the room
-                    io.to(roomId).emit('game-started', {
-                        timeRemaining: room.getTimeRemaining(),
-                        activeChallenges: room.activeChallenges.map(challenge => ({
-                            ...challenge,
-                            isProved: false // Initially no styles are proved for any player
-                        })),
-                        leaderboard: room.getLeaderboard() // Send full leaderboard
+                    // Tailor activeChallenges for each prover
+                    room.provers.forEach((prover, proverSocketId) => {
+                        const proverSocket = io.sockets.sockets.get(proverSocketId);
+                        if (proverSocket) {
+                            const challengesToSend = room.activeChallenges.map(challenge => ({
+                                ...challenge,
+                                isProved: prover.provedStyleIds.has(challenge.id)
+                            }));
+                            proverSocket.emit('game-started', {
+                                timeRemaining: room.getTimeRemaining(),
+                                activeChallenges: challengesToSend,
+                                leaderboard: room.getLeaderboard(),
+                                proverScore: prover.score
+                            });
+                        }
                     });
                     console.log(`Host ${socket.prover.provername} started game in room ${roomId}.`);
                 } else {
