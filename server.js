@@ -151,7 +151,7 @@ let proversCollection; // To hold the reference to the provers collection
             return styles;
         }
 
-        // MODIFIED: Default gridSize for server-side pattern checking is now 10
+        // Default gridSize for server-side pattern checking is now 10
         function serverCheckPattern(selectedNodeIndices, pattern, gridSize = 10) { 
             if (selectedNodeIndices.length !== pattern.length) {
                 return false;
@@ -190,7 +190,7 @@ let proversCollection; // To hold the reference to the provers collection
                 this.challengeCount = 0;
                 this.createdAt = Date.now();
                 this.gameInterval = null;
-                this.styleRefreshInterval = null; // ADDED: New interval for style refreshes
+                this.styleRefreshInterval = null; 
                 this.lastGameUpdate = Date.now();
             }
 
@@ -209,7 +209,7 @@ let proversCollection; // To hold the reference to the provers collection
                     correctProofs: 0,
                     wrongProofs: 0,
                     lastProofTime: null,
-                    provedStyleIds: new Set() // ADDED: Track proved styles per prover for client-side feedback
+                    provedStyleIds: new Set() 
                 });
                 return true;
             }
@@ -227,7 +227,7 @@ let proversCollection; // To hold the reference to the provers collection
                         clearInterval(this.gameInterval);
                         this.gameInterval = null;
                     }
-                    if (this.styleRefreshInterval) { // ADDED: Clear style refresh interval
+                    if (this.styleRefreshInterval) { 
                         clearInterval(this.styleRefreshInterval);
                         this.styleRefreshInterval = null;
                     }
@@ -271,19 +271,21 @@ let proversCollection; // To hold the reference to the provers collection
                     }
                 }, 1000);
 
-                // ADDED: New interval for refreshing active challenges every 15 seconds
-                this.styleRefreshInterval = setInterval(() => {
-                    if (this.gameState === 'active' && !this.isGameFinished()) {
-                        this.refreshChallenges();
-                        this.broadcastGameState(); // Broadcast the new challenges
-                        console.log(`Room ${this.id}: Challenges refreshed.`);
-                    }
-                }, 15 * 1000); // 15 seconds
+                // Add style refresh interval only for multiplayer/VS modes
+                if (this.mode === 'vs' || this.mode === 'multiprover') {
+                    this.styleRefreshInterval = setInterval(() => {
+                        if (this.gameState === 'active' && !this.isGameFinished()) {
+                            this.refreshChallenges();
+                            this.broadcastGameState(); // Broadcast the new challenges
+                            console.log(`Room ${this.id}: Challenges refreshed.`);
+                        }
+                    }, 15 * 1000); // 15 seconds
+                }
                 
                 return true;
             }
             
-            // ADDED: Function to refresh ALL active challenges
+            // Function to refresh ALL active challenges
             refreshChallenges() {
                 this.activeChallenges = generateServerRandomStyles(8); // Always generate 8 new styles
                 // Clear proved styles for all provers in the room as new challenges are presented
@@ -292,9 +294,10 @@ let proversCollection; // To hold the reference to the provers collection
                 });
             }
 
-            // MODIFIED: Generate 8 initial challenges for multiplayer modes
+            // Generate 8 initial challenges for multiplayer modes
             initializeChallenges() {
-                // For VS and Multiprover, always start with 8 challenges
+                // For VS and Multiprover, always start with 8 challenges.
+                // NOTE: This server.js only handles multiplayer rooms. Single player is client-side only.
                 this.activeChallenges = generateServerRandomStyles(8); 
                 console.log(`Initialized ${this.activeChallenges.length} challenges for room ${this.id}.`);
             }
@@ -304,7 +307,6 @@ let proversCollection; // To hold the reference to the provers collection
                     const style = this.activeChallenges[i];
                     // Pass the room's gridSize (which is implicitly 10 now, due to client change)
                     if (serverCheckPattern(selectedNodeIndices, style.pattern, 10)) { 
-                        // IMPORTANT: Only remove if it was actually proved
                         this.activeChallenges.splice(i, 1); // Remove the proved style
                         console.log(`Style '${style.name}' proved and removed from active challenges in room ${this.id}.`);
                         return style;
@@ -313,7 +315,7 @@ let proversCollection; // To hold the reference to the provers collection
                 return null;
             }
 
-            // MODIFIED: submitProof logic to NOT add new styles immediately
+            // submitProof logic to NOT add new styles immediately
             submitProof(socketId, selectedNodes) {
                 const prover = this.provers.get(socketId);
                 if (!prover || this.gameState !== 'active') {
@@ -326,12 +328,9 @@ let proversCollection; // To hold the reference to the provers collection
                     prover.score += 10;
                     prover.correctProofs += 1;
                     prover.lastProofTime = Date.now();
-                    prover.provedStyleIds.add(provedStyle.id); // Track proved style ID
+                    prover.provedStyleIds.add(provedStyle.id); 
 
-                    // *** THIS IS THE CRUCIAL CHANGE: NO IMMEDIATE STYLE REPLACEMENT ***
-                    // New styles will now ONLY appear during the 15-second refresh cycle.
-                    // The `activeChallenges` array will simply shrink as styles are proved.
-
+                    // No immediate style replacement. New styles ONLY appear during 15-second refresh.
                     return {
                         isCorrect: true,
                         message: `Proof of ${provedStyle.name}✅Proof Successful! +10 points!`,
@@ -382,7 +381,7 @@ let proversCollection; // To hold the reference to the provers collection
                     clearInterval(this.gameInterval);
                     this.gameInterval = null;
                 }
-                if (this.styleRefreshInterval) { // ADDED: Clear style refresh interval
+                if (this.styleRefreshInterval) { 
                     clearInterval(this.styleRefreshInterval);
                     this.styleRefreshInterval = null;
                 }
@@ -675,11 +674,13 @@ let proversCollection; // To hold the reference to the provers collection
                                 leaderboard: room.getLeaderboard(),
                                 newHost: wasHost ? room.hostProvername : null
                             });
+                            // Condition for ending VS game on player departure: requires at least 2 players
                             if (room.gameState === 'active' && room.mode === 'vs' && room.provers.size < 2) {
                                 const finalResults = room.finishGame();
                                 io.to(roomIdToCleanup).emit('game-ended', { results: finalResults, message: `${leavingProvername} left the game. Game Over.` });
                                 gameRooms.delete(roomIdToCleanup);
                             }
+                            // No specific end condition for multiprover if players leave, as it can continue with fewer.
                         }
                         io.emit('rooms-updated');
                     }
@@ -769,11 +770,13 @@ let proversCollection; // To hold the reference to the provers collection
                             leaderboard: room.getLeaderboard(),
                             newHost: wasHost ? room.hostProvername : null
                         });
+                        // Condition for ending VS game on player departure: requires at least 2 players
                         if (room.gameState === 'active' && room.mode === 'vs' && room.provers.size < 2) {
                             const finalResults = room.finishGame();
                             io.to(roomId).emit('game-ended', { results: finalResults, message: `${leavingProvername} left the game. Game Over.` });
                             gameRooms.delete(roomId);
                         }
+                        // No specific end condition for multiprover if players leave, as it can continue with fewer.
                     }
                     io.emit('rooms-updated');
                 }
@@ -800,31 +803,56 @@ let proversCollection; // To hold the reference to the provers collection
                 if (room) {
                     room.setProverReady(socket.id, ready);
                     room.broadcastGameState(); // Update all clients on ready status
-                    if (room.allProversReady() && room.provers.size >= 1 && room.gameState === 'waiting') { // Require at least 1 prover to start game
-                        room.startGame(); // Host will emit this, others will just set ready
+
+                    let minPlayersForStart = 0; // Default, will be set based on mode
+                    if (room.mode === 'vs') {
+                        minPlayersForStart = 2; // VS mode requires 2 players
+                    } else if (room.mode === 'multiprover') {
+                        minPlayersForStart = 3; // Multiprover mode requires 3 players
+                    }
+
+                    if (room.allProversReady() && room.provers.size >= minPlayersForStart && room.gameState === 'waiting') {
+                        room.startGame(); // Start the game if all ready and min players met
                         room.broadcastGameState(); // Initial broadcast of active game state
                     }
                 }
             });
 
-            // Host can start game if enough players are ready
+            // Host can start game if enough players are ready (Manual start for host)
             socket.on('host-start-game', (data) => {
                 const { roomId } = data;
                 const room = gameRooms.get(roomId);
-                if (room && socket.id === room.hostSocketId && room.allProversReady()) {
-                    if (room.provers.size < 1) { // Changed from 2 to 1 for starting a multiplayer game
-                         socket.emit('error', { message: 'Need at least 1 prover to start a multiplayer game.' });
-                         return;
-                    }
+                if (!room) {
+                    socket.emit('error', { message: 'Room not found.' });
+                    return;
+                }
+                if (socket.id !== room.hostSocketId) {
+                    socket.emit('error', { message: 'Only the host can start the game.' });
+                    return;
+                }
+                
+                let minPlayersForStart = 0; // Default, will be set based on mode
+                if (room.mode === 'vs') {
+                    minPlayersForStart = 2; // VS mode requires 2 players
+                } else if (room.mode === 'multiprover') {
+                    minPlayersForStart = 3; // Multiprover mode requires 3 players
+                }
+
+                if (room.provers.size < minPlayersForStart) {
+                    socket.emit('error', { message: `Need at least ${minPlayersForStart} prover(s) to start this game mode.` });
+                    return;
+                }
+                
+                if (!room.allProversReady()) {
+                    socket.emit('error', { message: 'All provers must be ready to start the game.' });
+                    return;
+                }
+
+                if (room.gameState === 'waiting') {
                     room.startGame();
                     room.broadcastGameState();
-                } else if (!room) {
-                    socket.emit('error', { message: 'Room not found.' });
-                }
-                 else if (socket.id !== room.hostSocketId) {
-                    socket.emit('error', { message: 'Only the host can start the game.' });
-                } else if (!room.allProversReady()) {
-                    socket.emit('error', { message: 'All provers must be ready to start the game.' });
+                } else {
+                    socket.emit('error', { message: 'Game is already active or finished.' });
                 }
             });
 
@@ -847,7 +875,7 @@ let proversCollection; // To hold the reference to the provers collection
                 if (room && socket.id === room.hostSocketId) {
                     // Clear existing intervals if any
                     if (room.gameInterval) clearInterval(room.gameInterval);
-                    if (room.styleRefreshInterval) clearInterval(room.styleRefreshInterval); // ADDED: Clear style refresh interval
+                    if (room.styleRefreshInterval) clearInterval(room.styleRefreshInterval); 
 
                     // Reset room state
                     room.gameState = 'waiting';

@@ -385,7 +385,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     #grid {
         --grid-cols: 10;
         --grid-rows: 10;
-        --node-size: 30px;
+        --node-size: 28px;
         height: auto;
         width: 100%;
         aspect-ratio: 1 / 1;
@@ -393,7 +393,7 @@ button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         display: grid;
         grid-template-columns: repeat(var(--grid-cols), var(--node-size)) !important;
         grid-template-rows: repeat(var(--grid-rows), var(--node-size)) !important;
-        gap: 2px;
+        gap: 4px;
         max-width: calc((var(--grid-cols) * var(--node-size)) + ((var(--grid-cols) - 1) * 2px));
     }
     
