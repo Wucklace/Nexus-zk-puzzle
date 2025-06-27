@@ -250,7 +250,7 @@ let proversCollection; // To hold the reference to the provers collection
                 this.startTime = Date.now();
                 this.endTime = this.startTime + (this.timer * 60 * 1000);
                 this.initializeChallenges();
-                consoleസ
+                console.log
 
                 console.log(`Game started in room ${this.id}. Mode: ${this.mode}`);
 
