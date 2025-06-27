@@ -6,277 +6,342 @@
     <title>Nexus zk Puzzle - 1v1 Versus</title>
     <link rel="icon" type="image/svg+xml" href="images/nexus_logo.svg">
     <link rel="stylesheet" href="style.css" /> <!-- Global styles -->
-    
-    <!-- Tailwind CSS CDN for modern responsive styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#0095ff',
-                        secondary: '#555',
-                        darkbg: '#2e2e2e',
-                        darkerbg: '#3a3a3a',
-                        textlight: '#f8f8f8',
-                        textmedium: '#ccc',
-                        textdark: '#f0f0f0',
-                        success: '#28a745',
-                        error: '#dc3545',
-                        info: '#17a2b8',
-                    },
-                }
-            }
-        }
-    </script>
-    <!-- Load Socket.IO client library -->
-    <script src="/socket.io/socket.io.min.js"></script>
-
-    <!-- 
-        IMPORTANT: Define global screen management functions here.
-        These functions are called by nzk-puzzle.js and must be available globally
-        before nzk-puzzle.js executes its DOMContentLoaded listener.
-        They should only toggle classes (active/hidden), NOT manipulate innerHTML of large sections,
-        to ensure Socket.IO connection stability.
-    -->
-    <script>
-        /**
-         * Generic function to show a specific screen and hide others.
-         * Assumes screens have the class 'screen'.
-         * @param {HTMLElement} screenElement - The screen element to show.
-         */
-        window.showScreen = function(screenElement) {
-            console.log(`[HTML] Attempting to show screen: ${screenElement ? screenElement.id : 'null'}`);
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-                screen.classList.add('hidden'); // Ensure it's truly hidden
-            });
-            if (screenElement) {
-                screenElement.classList.remove('hidden');
-                screenElement.classList.add('active'); // Add active for animations/transitions
-            } else {
-                console.warn("[HTML] showScreen called with null or undefined element.");
-            }
-        };
-
-        /**
-         * Specific function for VS lobby sub-screens.
-         * Assumes sub-screens have the class 'lobby-sub-screen'.
-         * @param {HTMLElement} subScreenElement - The sub-screen element to show.
-         */
-        window.showLobbySubScreen = function(subScreenElement) {
-            console.log(`[HTML] Attempting to show lobby sub-screen: ${subScreenElement ? subScreenElement.id : 'null'}`);
-            document.querySelectorAll('.lobby-sub-screen').forEach(screen => {
-                screen.classList.add('hidden');
-                screen.classList.remove('active');
-            });
-            if (subScreenElement) {
-                subScreenElement.classList.remove('hidden');
-                subScreenElement.classList.add('active');
-            } else {
-                console.warn("[HTML] showLobbySubScreen called with null or undefined element.");
-            }
-        };
-    </script>
-
-    <!-- Your internal CSS for specific overrides or animations not covered by Tailwind -->
     <style>
-        /* Base styles for HTML and Body */
+        /* Internal CSS for versus.html (VS Mode) */
+        /* Ensure HTML and Body take full viewport height for proper centering */
         html, body {
             margin: 0;
             padding: 0;
+            overflow: auto; /* Allow scrolling if content overflows */
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif; /* Ensure Inter font is used */
-            color: #f8f8f8; /* Default text color */
-            background-color: #1a1a1a; /* Dark background */
         }
         body {
-            /* Tailwind classes handle flex, min-height, padding, centering */
-            /* display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 1.25rem; */
-            overflow-y: auto; /* Allow vertical scrolling if content overflows */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        /* Screen transitions */
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        h1 img {
+            height: 1em;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
         .screen {
-            opacity: 0;
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-            transform: translateY(20px);
-            /* Initially hidden by JS, or use 'hidden' utility class */
+            display: none; /* Controlled by JavaScript */
+            width: 100%;
+            max-width: 1200px; /* Max width for content */
+            padding: 20px;
+            box-sizing: border-box;
         }
+
         .screen.active {
-            opacity: 1;
-            transform: translateY(0);
+            display: block;
         }
 
-        /* Container styling */
         .lobby-container, .vs-game-container, .game-over-container {
-            animation: fadeIn 0.8s ease-out; /* Keep custom animation */
+            background-color: #2e2e2e;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            width: 100%;
+            border: 2px solid #0095ff;
+            animation: fadeIn 0.8s ease-out;
+            box-sizing: border-box; /* Ensure padding and border are included in width */
+            margin-left: auto; /* For horizontal centering */
+            margin-right: auto;
         }
 
-        /* Grid specific styles - these are hard to fully replicate with Tailwind for dynamic grid-template-columns/rows */
-        .grid-container {
+        .lobby-container h2, .lobby-container h3, 
+        .vs-game-container h2, .vs-game-container h3,
+        .game-over-container h2 {
+            color: #f8f8f8;
+            margin-bottom: 25px;
+            font-size: 2em;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+        }
+
+        .lobby-btn {
+            background-color: #0095ff;
+            color: #f8f8f8;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin: 10px;
+        }
+        .lobby-btn:hover:not(:disabled) { background-color: #007bff; transform: translateY(-2px); }
+        .lobby-btn:active:not(:disabled) { transform: translateY(0); background-color: #0056b3; }
+        .lobby-btn.secondary {
+            background-color: #555;
+            color: white;
+        }
+        .lobby-btn.secondary:hover:not(:disabled) { background-color: #666; }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hidden { display: none; }
+
+        .setting-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ccc;
+        }
+        .setting-group input[type="text"],
+        .setting-group select {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            background-color: #4a4f59;
+            color: #f0f0f0;
+            font-size: 1em;
+            box-sizing: border-box; /* Ensures width includes padding */
+        }
+        #copy-code {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background-color: #28a745; /* Green copy button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #copy-code:hover { background-color: #218838; }
+
+        #prover-list { /* Changed from #player-list */
+            background-color: #4a4f59;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            min-height: 80px; /* Minimum height for visual consistency */
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        #prover-list .prover-item { /* Changed from .player-item */
+            padding: 8px 0;
+            border-bottom: 1px solid #555;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #prover-list .prover-item:last-child { /* Changed from .player-item:last-child */
+            border-bottom: none;
+        }
+        #prover-list .prover-item .provername { /* Changed from .username */
+            font-weight: bold;
+            color: #0095ff; /* Blue for provernames */
+        }
+        #prover-list .prover-item .ready-status { /* Changed from .player-item .ready-status */
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        #prover-list .prover-item .ready-status.ready { /* Changed from .player-item .ready-status.ready */
+            color: #28a745; /* Green for ready */
+        }
+
+        /* VS Game Screen Styles */
+        .vs-game-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            max-width: 1000px; /* Adjusted for single board display */
+        }
+
+        .vs-game-container h2, .vs-game-container p {
+            margin-bottom: 15px;
+            color: #f8f8f8;
+        }
+
+        .vs-boards-area {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping */
+            justify-content: center; /* Center the single board */
+            gap: 30px;
+        }
+
+        .vs-board-prover { /* Changed from .vs-board-player */
+            flex: 1; /* Allow flexing */
+            min-width: 400px; /* Minimum width for your board section */
+            background-color: #3a3a3a;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            border: 1px solid #444;
+        }
+        .vs-board-prover h3 {
+            color: #0095ff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .vs-grid {
             display: grid;
+            grid-template-columns: repeat(var(--grid-cols, 15), 25px); /* Adjusted cell size for single board */
+            grid-template-rows: repeat(var(--grid-rows, 15), 25px);
             gap: 2px;
             background-color: #2b2b2b;
-            border-radius: 0.5rem; /* 8px */
+            border-radius: 8px;
             overflow: hidden;
-            border: 2px solid #0095ff; /* primary color */
-            aspect-ratio: 1 / 1; /* Keep grid square */
-            margin: 0 auto; /* Center grid */
+            width: fit-content; /* Fit content to cells */
+            height: auto;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto 20px auto; /* Center grid */
+            border: 2px solid #0095ff;
         }
 
-        .node {
+        .vs-grid .node {
+            width: 25px; /* Adjust node size */
+            height: 25px;
             background-color: #444;
             border: 1px solid #666;
             border-radius: 3px;
             cursor: pointer;
-            transition: background-color 0.1s ease, border-color 0.1s ease;
         }
 
-        .node.active {
-            background-color: #444; /* Active nodes stay dark */
-            border-color: #0095ff; /* Primary color border */
-            box-shadow: 0 0 5px #0095ff; /* Glow effect */
-        }
-
-        .node.proof-success {
-            background-color: #28a745; /* Green */
-            animation: flashSuccess 0.2s ease-out;
-        }
-        .node.proof-fail {
-            background-color: #dc3545; /* Red */
-            animation: flashFail 0.2s ease-out;
-        }
-
-        @keyframes flashSuccess {
-            0% { background-color: #28a745; }
-            100% { background-color: #444; }
-        }
-        @keyframes flashFail {
-            0% { background-color: #dc3545; }
-            100% { background-color: #444; }
-        }
-
-        /* Style Preview Grid */
-        .style-shape {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr)); /* Responsive grid for 4x4 preview */
-            grid-auto-rows: 1fr;
-            gap: 1px;
-            background-color: #2b2b2b;
-            border-radius: 0.25rem;
-            overflow: hidden;
-            border: 1px solid #555;
-            aspect-ratio: 1 / 1;
-            width: 4rem; /* Fixed size for preview grid */
-            height: 4rem;
-        }
-        .style-shape .style-node {
+        .vs-grid .node.active {
             background-color: #444;
-            border-radius: 1px;
+            border-color: #0095ff;
         }
-        .style-shape .style-node.active {
+
+        /* Removed vs-prove-btn and vs-clear-btn styles as they are removed from HTML */
+
+        #leave-vs-game {
+            background-color: #555;
+            color: white;
+            width: auto; /* Allow sizing based on content */
+            margin-top: 25px;
+            padding: 10px 25px;
+            align-self: center; /* Center this button */
+        }
+        #leave-vs-game:hover { background-color: #666; }
+
+        .styles-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            min-height: 60px; /* Ensure space for styles */
+        }
+        .styles-preview .style-shape { /* Inherit from global style.css */
+            box-shadow: none; /* Remove extra shadow */
+            border: 1px solid #555;
+        }
+        .styles-preview .style-node.active {
             background-color: #0095ff;
         }
-        .style-preview-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            opacity: 1;
-            transition: opacity 0.3s ease-out;
-        }
-        .style-preview-wrapper.proved-style {
-            opacity: 0.4; /* Fade out proved styles */
-        }
-
-
-        /* Custom Message Box */
-        #custom-message-box {
-            position: fixed;
-            bottom: 1.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            color: white;
-            font-weight: bold;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        }
-        #custom-message-box.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        #custom-message-box.info { background-color: #17a2b8; } /* Tailwind: bg-info */
-        #custom-message-box.success { background-color: #28a745; } /* Tailwind: bg-success */
-        #custom-message-box.error { background-color: #dc3545; } /* Tailwind: bg-error */
-
-        /* Connection Status */
-        #connection-status {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .styles-preview .style-name {
             background-color: #333;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
             color: white;
-            font-size: 0.875rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.5s ease-out;
-        }
-        #connection-status.hidden {
-            opacity: 0;
-            pointer-events: none; /* Make it unclickable when hidden */
-        }
-        #status-indicator {
-            font-size: 1.25rem;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
         }
 
-        /* Keyframe for general fade-in animation */
+        /* Game Over Screen (reused from global style.css concept) */
+        .game-over-container {
+            max-width: 600px;
+        }
+        #vs-final-results {
+            font-size: 1.2em;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        #vs-final-results .final-score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+        #vs-final-results .final-score-item:last-child {
+            border-bottom: none;
+        }
+        #vs-final-results .final-name {
+            font-weight: bold;
+            color: #0095ff;
+        }
+        #vs-final-results .final-score {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(1.875rem); } /* 30px */
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .vs-boards-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            .vs-board-prover {
+                width: 90%;
+                min-width: unset;
+            }
+        }
+        @media (max-width: 600px) {
+            .vs-grid {
+                grid-template-columns: repeat(var(--grid-cols, 15), 18px); /* Even smaller cells */
+                grid-template-rows: repeat(var(--grid-rows, 15), 18px);
+            }
+            .vs-grid .node {
+                width: 18px;
+                height: 18px;
+            }
         }
     </style>
 </head>
-<body class="flex flex-col justify-center items-center min-h-screen p-5 bg-gray-900 text-textlight font-sans">
-    <h1 class="text-4xl font-bold mb-8 flex items-center text-primary">
-        <img src="images/nexus_logo.svg" alt="Nexus Logo" class="h-10 mr-4 inline-block">
+<body>
+    <h1>
+        <img src="images/nexus_logo.svg" alt="Nexus Logo" style="height: 1em; vertical-align: middle;">
         Nexus zk Puzzle
     </h1>
 
-    <!-- Lobby Screen -->
-    <div id="lobby-screen" class="screen active w-full max-w-4xl">
-        <div class="lobby-container bg-darkbg p-10 rounded-2xl shadow-xl border-2 border-primary text-center animate-fadeIn">
-            <h2 id="lobby-title" class="text-4xl font-bold mb-6 text-textlight border-b border-gray-700 pb-4">VS Mode Lobby</h2>
+    <div id="lobby-screen" class="screen active">
+        <div class="lobby-container">
+            <h2 id="lobby-title">VS Mode Lobby</h2>
             
-            <div id="lobby-options" class="lobby-sub-screen active">
-                <button id="host-btn" class="lobby-btn bg-primary hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    🏠 Host Game
-                </button>
-                <button id="join-btn" class="lobby-btn bg-primary hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    🚪 Join Game
-                </button>
-                <button id="back-to-modes-lobby" class="lobby-btn bg-secondary hover:bg-gray-600 active:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-                    ← Back to Modes
-                </button>
+            <div id="lobby-options">
+                <button id="host-btn" class="lobby-btn">🏠 Host Game</button>
+                <button id="join-btn" class="lobby-btn">🚪 Join Game</button>
+                <button id="back-to-modes-lobby" class="lobby-btn secondary">← Back to Modes</button>
             </div>
 
-            <div id="host-settings" class="lobby-sub-screen hidden">
-                <h3 class="text-3xl font-bold mb-6 text-textlight border-b border-gray-700 pb-4">Host Settings</h3>
-                <div class="mb-5 text-left">
-                    <label for="game-duration" class="block text-lg font-bold mb-2 text-textmedium">Game Duration:</label>
-                    <select id="game-duration" class="w-full p-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-textdark text-lg focus:outline-none focus:border-primary">
+            <div id="host-settings" class="hidden">
+                <h3>Host Settings</h3>
+                <div class="setting-group">
+                    <label for="game-duration">Game Duration:</label>
+                    <select id="game-duration">
                         <option value="10">10 minutes</option>
                         <option value="20">20 minutes</option>
                         <option value="30" selected>30 minutes</option>
@@ -284,97 +349,85 @@
                         <option value="60">60 minutes</option>
                     </select>
                 </div>
-                <div class="mb-5 text-left flex items-center">
-                    <label for="room-code" class="block text-lg font-bold mr-4 text-textmedium">Room Code:</label>
-                    <input type="text" id="room-code" readonly class="flex-grow p-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-textdark text-lg focus:outline-none focus:border-primary">
-                    <button id="copy-code" class="ml-4 p-3 bg-success hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">Copy</button>
+                <div class="setting-group">
+                    <label for="room-code">Room Code:</label>
+                    <input type="text" id="room-code" readonly>
+                    <button id="copy-code">Copy</button>
                 </div>
-                <button id="start-hosting" class="lobby-btn bg-primary hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Start Hosting</button>
-                <button id="cancel-host" class="lobby-btn bg-secondary hover:bg-gray-600 active:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Cancel</button>
+                <button id="start-hosting" class="lobby-btn">Start Hosting</button>
+                <button id="cancel-host" class="lobby-btn secondary">Cancel</button>
             </div>
 
-            <div id="join-settings" class="lobby-sub-screen hidden">
-                <h3 class="text-3xl font-bold mb-6 text-textlight border-b border-gray-700 pb-4">Join Game</h3>
-                <div class="mb-5 text-left">
-                    <label for="join-code" class="block text-lg font-bold mb-2 text-textmedium">Enter Room Code:</label>
-                    <input type="text" id="join-code" placeholder="Enter room code" class="w-full p-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-textdark text-lg focus:outline-none focus:border-primary">
+            <div id="join-settings" class="hidden">
+                <h3>Join Game</h3>
+                <div class="setting-group">
+                    <label for="join-code">Enter Room Code:</label>
+                    <input type="text" id="join-code" placeholder="Enter room code">
                 </div>
-                <button id="join-game" class="lobby-btn bg-primary hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Join Game</button>
-                <button id="cancel-join" class="lobby-btn bg-secondary hover:bg-gray-600 active:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Cancel</button>
+                <button id="join-game" class="lobby-btn">Join Game</button>
+                <button id="cancel-join" class="lobby-btn secondary">Cancel</button>
             </div>
 
-            <div id="waiting-room" class="lobby-sub-screen hidden">
-                <h3 class="text-3xl font-bold mb-6 text-textlight border-b border-gray-700 pb-4">Waiting Room</h3>
-                <p class="text-lg mb-2 text-textmedium">Room Code: <span id="current-room-code" class="font-bold text-primary"></span></p>
-                <p class="text-lg mb-2 text-textmedium">Provers: <span id="prover-count" class="font-bold text-primary">0</span></p>
-                <div id="prover-list" class="bg-gray-700 p-4 rounded-lg mt-4 mb-4 min-h-[5rem] max-h-[12.5rem] overflow-y-auto text-left"></div>
-                <p class="text-lg mb-4 text-textmedium">Your Status: <span id="ready-status-span" class="font-bold text-red-500">NOT READY</span></p>
-                <button id="set-ready-btn" class="lobby-btn bg-primary hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" data-ready="false">Ready</button>
-                <div id="host-controls" class="hidden inline-block ml-4">
-                    <button id="start-vs-game" class="lobby-btn bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50" disabled>Start Game</button>
+            <div id="waiting-room" class="hidden">
+                <h3>Waiting Room</h3>
+                <p>Room Code: <span id="current-room-code"></span></p>
+                <p>Provers: <span id="prover-count">0</span></p>
+                <div id="prover-list"></div>
+                <p>Your Status: <span id="ready-status-span">NOT READY</span></p> <!-- New ready status display -->
+                <button id="set-ready-btn" class="lobby-btn" data-ready="false">Ready</button> <!-- New ready button -->
+                <div id="host-controls" class="hidden">
+                    <button id="start-vs-game" class="lobby-btn" disabled>Start Game</button>
                 </div>
-                <button id="leave-room" class="lobby-btn bg-secondary hover:bg-gray-600 active:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Leave Room</button>
+                <button id="leave-room" class="lobby-btn secondary">Leave Room</button>
             </div>
         </div>
     </div>
 
-    <!-- VS Game Screen -->
-    <div id="vs-game-screen" class="screen hidden w-full max-w-6xl">
-        <div class="vs-game-container bg-darkbg p-10 rounded-2xl shadow-xl border-2 border-primary text-center flex flex-col gap-8 animate-fadeIn">
-            <h2 class="text-4xl font-bold text-textlight border-b border-gray-700 pb-4">1v1 Versus Battle!</h2>
-            <p class="text-xl text-textmedium">Room: <span id="vs-room-code" class="font-bold text-primary"></span> | Time Left: <span id="vs-timer" class="font-bold text-primary">0</span>s</p>
+    <div id="vs-game-screen" class="screen">
+        <div class="vs-game-container">
+            <h2>1v1 Versus Battle!</h2>
+            <p>Room: <span id="vs-room-code"></span> | Time Left: <span id="vs-timer">0</span>s</p>
 
-            <div class="vs-boards-area flex flex-col md:flex-row justify-center items-stretch gap-8">
-                <div class="vs-board-prover bg-darkerbg p-6 rounded-xl shadow-inner border border-gray-700 flex-1 min-w-[25rem] text-center">
-                    <h3 class="text-2xl font-bold text-primary mb-5">Your Board (<span id="vs-your-provername"></span>)</h3>
-                    <p class="text-lg text-textmedium mb-2">Score: <span id="vs-your-score" class="font-bold text-success">0</span></p>
-                    <p class="text-lg text-textmedium mb-4">Selected: <span id="vs-your-active-count" class="font-bold text-primary">0</span></p>
-                    <div id="vs-your-grid" class="grid-container w-full max-w-[28rem] h-auto"></div>
-                    <div id="vs-active-styles-preview" class="styles-preview flex flex-wrap gap-2 justify-center mt-6 min-h-[3.75rem]"></div>
+            <div class="vs-boards-area">
+                <div class="vs-board-prover">
+                    <h3>Your Board (<span id="vs-your-provername"></span>)</h3>
+                    <p>Score: <span id="vs-your-score">0</span></p>
+                    <p>Selected: <span id="vs-your-active-count">0</span></p>
+                    <div id="vs-your-grid" class="vs-grid"></div>
+                    <div id="vs-active-styles-preview" class="styles-preview"></div>
+                    <!-- Manual Prove Style and Clear Selection buttons removed -->
                 </div>
                 
-                <div class="vs-board-prover vs-opponent-info bg-darkerbg p-6 rounded-xl shadow-inner border border-gray-700 flex-1 min-w-[25rem] text-center">
-                    <h3 class="text-2xl font-bold text-primary mb-5">Opponent (<span id="vs-opponent-provername">-</span>)</h3>
-                    <p class="text-lg text-textmedium mb-2">Score: <span id="vs-opponent-score" class="font-bold text-error">0</span></p>
-                    <p id="vs-opponent-status" class="text-lg text-textmedium mb-4">Waiting for opponent's move...</p>
-                    <p class="text-sm text-gray-500">Opponent's board is not shown in VS mode.</p>
+                <div class="vs-board-prover vs-opponent-info">
+                    <h3>Opponent (<span id="vs-opponent-provername">-</span>)</h3>
+                    <p>Score: <span id="vs-opponent-score">0</span></p>
+                    <p id="vs-opponent-status">Waiting for opponent's move...</p>
+                    <p class="small-text">Opponent's board is not shown in VS mode.</p>
                 </div>
             </div>
-            <button id="leave-vs-game" class="lobby-btn bg-secondary hover:bg-gray-600 active:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 mt-6 self-center">Leave Game</button>
+            <button id="leave-vs-game" class="lobby-btn secondary">Leave Game</button>
         </div>
     </div>
 
-    <!-- Game Over Screen -->
-    <div id="game-over-screen" class="screen hidden w-full max-w-2xl">
-        <div class="game-over-container bg-darkbg p-10 rounded-2xl shadow-xl border-2 border-primary text-center animate-fadeIn">
-            <h2 class="text-4xl font-bold mb-8 text-textlight">VS Battle Over!</h2>
-            <div id="vs-final-results" class="text-xl text-textmedium mb-8">
-                <!-- Final scores will be displayed here -->
-                <h3 class="text-2xl font-bold mb-4">Final Scores:</h3>
-                <div class="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0">
-                    <span class="font-bold text-primary">Prover 1</span>
-                    <span class="font-bold text-success">100 🏆</span>
-                </div>
-                <div class="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0">
-                    <span class="font-bold text-primary">Prover 2</span>
-                    <span class="font-bold text-error">50</span>
-                </div>
-            </div>
-            <button id="play-again-vs" class="lobby-btn bg-primary hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Play Again</button>
-            <button id="back-to-modes-vs-gameover" class="lobby-btn bg-secondary hover:bg-gray-600 active:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">Back to Modes</button>
+    <div id="game-over-screen" class="screen">
+        <div class="game-over-container">
+            <h2>VS Battle Over!</h2>
+            <div id="vs-final-results"></div>
+            <button id="play-again-vs" class="lobby-btn">Play Again</button>
+            <button id="back-to-modes-vs-gameover" class="lobby-btn secondary">Back to Modes</button>
         </div>
     </div>
 
     <!-- Connection Status (from style.css) -->
-    <div id="connection-status" class="fixed top-6 right-6 flex items-center gap-2 bg-gray-800 p-2 rounded-lg text-white text-sm shadow-md transition-opacity duration-500 ease-out z-50">
-        <span id="status-indicator" class="text-xl">🔴</span>
+    <div id="connection-status" class="hidden">
+        <span id="status-indicator">🔴</span>
         <span id="status-text">Connecting...</span>
     </div>
 
     <!-- Custom Message Box - Global element -->
-    <div id="custom-message-box" class="fixed bottom-6 left-1/2 -translate-x-1/2 p-3 rounded-xl text-white font-bold z-50 opacity-0 invisible transition-all duration-300 ease-out shadow-lg"></div>
+    <div id="custom-message-box"></div>
 
-    <!-- Your main script MUST be loaded AFTER all screen functions and HTML elements -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="nzk-puzzle.js"></script>
     <script>
         // Internal JavaScript for versus.html to manage UI flow and connect to nzk-puzzle.js and Socket.IO
@@ -438,28 +491,15 @@
             const backToModesVsGameoverBtn = document.getElementById('back-to-modes-vs-gameover');
 
             // --- UI State Management Functions (exposed by this script for nzk-puzzle.js to call) ---
-            // These functions now work by toggling 'hidden' and 'active' classes,
-            // which is safer for Socket.IO connection stability.
             window.showLobbySubScreen = function(subScreenElement) {
                 lobbyOptions.classList.add('hidden');
                 hostSettings.classList.add('hidden');
                 joinSettings.classList.add('hidden');
                 waitingRoom.classList.add('hidden');
-                
-                lobbyOptions.classList.remove('active');
-                hostSettings.classList.remove('active');
-                joinSettings.classList.remove('active');
-                waitingRoom.classList.remove('active');
-
                 subScreenElement.classList.remove('hidden');
-                subScreenElement.classList.add('active');
             }
             window.showScreen = function(screenElement) {
-                document.querySelectorAll('.screen').forEach(screen => {
-                    screen.classList.remove('active');
-                    screen.classList.add('hidden');
-                });
-                screenElement.classList.remove('hidden');
+                document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
                 screenElement.classList.add('active');
             }
             // Expose a function for nzk-puzzle.js to update the active count in VS UI
@@ -508,9 +548,7 @@
             leaveRoomBtn.addEventListener('click', window.emitLeaveRoom); // Lobby waiting room leave
             leaveVsGameBtn.addEventListener('click', window.emitLeaveRoom); // In-game leave
 
-            // New: Ready button logic (event listener is also attached in nzk-puzzle.js now)
-            // This listener is kept for redundancy/clarity if HTML is loaded directly,
-            // but nzk-puzzle.js's listener is the primary one after DOMContentLoaded.
+            // New: Ready button logic
             if (setReadyBtn) {
                 setReadyBtn.addEventListener('click', () => {
                     const isReady = setReadyBtn.dataset.ready === 'true'; // Get current state

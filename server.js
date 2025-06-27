@@ -139,7 +139,11 @@ let proversCollection; // To hold the reference to the provers collection
             const styles = [];
             const availableShapes = [...serverStyleShapes];
             for (let i = 0; i < count; i++) {
-                if (availableShapes.length === 0) break;
+                if (availableShapes.length === 0) {
+                    console.warn("Not enough unique patterns to generate the requested count. Re-using patterns.");
+                    availableShapes.push(...serverStyleShapes); // Replenish if needed
+                    if (availableShapes.length === 0) break; // Avoid infinite loop if serverStyleShapes is empty
+                }
                 const randomIndex = Math.floor(Math.random() * availableShapes.length);
                 const selectedPattern = { ...availableShapes.splice(randomIndex, 1)[0] };
                 selectedPattern.id = `style_${serverStyleIdCounter++}_${Date.now()}`;
@@ -265,7 +269,7 @@ let proversCollection; // To hold the reference to the provers collection
             }
 
             initializeChallenges() {
-                const numChallenges = this.mode === 'vs' || this.mode === 'multiprover' ? 5 : 5;
+                const numChallenges = this.mode === 'vs' || this.mode === 'multiprover' ? 6 : 4;
                 this.activeChallenges = generateServerRandomStyles(numChallenges);
                 console.log(`Initialized ${this.activeChallenges.length} challenges for room ${this.id}.`);
             }
@@ -592,7 +596,7 @@ let proversCollection; // To hold the reference to the provers collection
         });
 
         // --- SOCKET.IO CONNECTION HANDLING ---
-        io.use(authenticateSocket);
+        io.use(authenticateSocket); // Ensure this middleware is defined earlier in your file
 
         io.on('connection', (socket) => {
             console.log(`Prover ${socket.prover.provername} connected via Socket.IO (ID: ${socket.id})`);
@@ -727,9 +731,116 @@ let proversCollection; // To hold the reference to the provers collection
                         }
                     }
                     io.emit('rooms-updated');
+                } else {
+                    console.warn(`Attempted to leave non-existent room: ${roomId}`);
                 }
             });
+
+            socket.on('toggle-ready', (data) => {
+                const { roomId, ready } = data;
+                const room = gameRooms.get(roomId);
+                
+                if (room && room.gameState === 'waiting') {
+                    room.setProverReady(socket.id, ready);
+                    
+                    let allProversRequiredForStartReady = false;
+                    if (room.mode === 'vs') {
+                        allProversRequiredForStartReady = room.provers.size === 2 && room.allProversReady();
+                    } else if (room.mode === 'multiprover') {
+                        allProversRequiredForStartReady = room.provers.size >= 3 && room.allProversReady();
+                    }
+
+                    io.to(roomId).emit('prover-ready-update', {
+                        provername: socket.prover.provername,
+                        ready: ready,
+                        leaderboard: room.getLeaderboard(),
+                        allReady: allProversRequiredForStartReady
+                    });
+                    console.log(`Prover ${socket.prover.provername} in room ${roomId} is now ${ready ? 'ready' : 'not ready'}. All required ready: ${allProversRequiredForStartReady}`);
+                } else {
+                    socket.emit('error', { message: 'Cannot change ready status in current room state.' });
+                }
+            });
+
+            // --- START GAME LISTENER (RE-INTRODUCED AND CORRECTED) ---
+            socket.on('start-game', (data) => {
+                const { roomId } = data;
+                const room = gameRooms.get(roomId);
+                
+                if (!room) {
+                    return socket.emit('error', { message: 'Room not found.' });
+                }
+                if (socket.id !== room.hostSocketId) {
+                    return socket.emit('error', { message: 'Only the host can start the game.' });
+                }
+                if (room.gameState === 'active') {
+                    return socket.emit('error', { message: 'Game already active.' });
+                }
+                
+                let canStart = false;
+                if (room.mode === 'vs') {
+                    canStart = room.provers.size === 2 && room.allProversReady();
+                    if (!canStart) {
+                        return socket.emit('error', { message: 'VS Mode requires exactly 2 ready provers to start.' });
+                    }
+                } else if (room.mode === 'multiprover') {
+                    canStart = room.provers.size >= 3 && room.allProversReady();
+                    if (!canStart) {
+                        return socket.emit('error', { message: 'Multiprover requires at least 3 ready provers to start.' });
+                    }
+                } else {
+                     return socket.emit('error', { message: 'Invalid game mode for starting.' });
+                }
+
+
+                if (room.startGame()) {
+                    io.to(roomId).emit('game-started', {
+                        timeRemaining: room.getTimeRemaining(),
+                        activeChallenges: room.activeChallenges,
+                        leaderboard: room.getLeaderboard() // Corrected key from 'initialLeaderboard' to 'leaderboard'
+                    });
+                    console.log(`Host ${socket.prover.provername} started game in room ${roomId}.`);
+                } else {
+                    socket.emit('error', { message: 'Failed to start game. Check room state.' });
+                }
+            });
+            // --- END START GAME LISTENER ---
+
+            socket.on('submit-proof', (data) => {
+                const { roomId, selectedNodes } = data;
+                const room = gameRooms.get(roomId);
+
+                if (room && room.gameState === 'active') {
+                    const result = room.submitProof(socket.id, selectedNodes);
+                    socket.emit('proof-submitted', {
+                        provername: socket.prover.provername,
+                        isCorrect: result.isCorrect,
+                        message: result.message,
+                        provedStyleId: result.provedStyleId,
+                        selectedNodes: result.selectedNodes
+                    });
+                } else {
+                    socket.emit('error', { message: 'Cannot submit proof. Game not active or room not found.' });
+                }
+            });
+
+            socket.on('get-rooms', () => {
+                const roomsList = Array.from(gameRooms.values())
+                    .filter(room => room.gameState === 'waiting')
+                    .map(room => ({
+                        id: room.id,
+                        hostProvername: room.hostProvername,
+                        mode: room.mode,
+                        proverCount: room.provers.size,
+                        maxProvers: room.maxProvers,
+                        timer: room.timer,
+                        allReady: room.allProversReady()
+                    }));
+                socket.emit('rooms-list', roomsList);
+                console.log(`Prover ${socket.prover.provername} requested rooms list. Sent ${roomsList.length} rooms.`);
+            });
         });
+
     } catch (error) {
         console.error('MongoDB connection error:', error);
         process.exit(1);

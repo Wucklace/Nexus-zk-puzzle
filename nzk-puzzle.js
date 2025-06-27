@@ -1323,27 +1323,27 @@ function handleGameStarted(data) {
         if (vsYourActiveCountSpan) vsYourActiveCountSpan.textContent = '0';
 
         if (vsActiveStylesPreviewDiv) buildStylePreview(vsActiveStylesPreviewDiv, data.activeChallenges, provedStyleIds);
-        if (data.initialLeaderboard) updateVsScoreboard(data.initialLeaderboard);
+        if (data.Leaderboard) updateVsScoreboard(data.Leaderboard);
         if (vsOpponentStatusDiv) vsOpponentStatusDiv.textContent = 'Waiting for opponent\'s move...';
         // Set your prover name
         if (vsYourProvernameSpan) vsYourProvernameSpan.textContent = provername;
         // Set opponent prover name if exists
-        const opponentProver = data.initialLeaderboard.find(p => p.provername !== provername);
+        const opponentProver = data.Leaderboard.find(p => p.provername !== provername);
         if(vsOpponentProvernameSpan) vsOpponentProvernameSpan.textContent = opponentProver ? opponentProver.provername : '-';
 
     } else if (currentGameMode === 'multiprover' && window.showScreen) {
         window.showScreen(document.getElementById('multiprover-game-screen'));
         if (multiGridDiv) buildGrid(multiGridDiv, 'multiprover');
         if (multiScoreSpan) multiScoreSpan.textContent = '0';
-        if (multiProverCountSpan) multiProverCountSpan.textContent = data.initialLeaderboard.length;
+        if (multiProverCountSpan) multiProverCountSpan.textContent = data.Leaderboard.length;
         if (multiProvernameSpan) multiProvernameSpan.textContent = provername;
         // Ensure multiActiveCountSpan is reset
         if (multiActiveCountSpan) multiActiveCountSpan.innerText = '0';
 
 
         if (multiStylesPreviewDiv) buildStylePreview(multiStylesPreviewDiv, data.activeChallenges, provedStyleIds);
-        if (data.initialLeaderboard) updateMultiproverScoreboard(data.initialLeaderboard);
-        if (multiLeaderSpan && data.initialLeaderboard.length > 0) multiLeaderSpan.textContent = data.initialLeaderboard[0].provername;
+        if (data.Leaderboard) updateMultiproverScoreboard(data.Leaderboard);
+        if (multiLeaderSpan && data.Leaderboard.length > 0) multiLeaderSpan.textContent = data.Leaderboard[0].provername;
     }
 }
 
