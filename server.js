@@ -249,10 +249,13 @@ let proversCollection; // To hold the reference to the provers collection
                 this.gameState = 'active';
                 this.startTime = Date.now();
                 this.endTime = this.startTime + (this.timer * 60 * 1000);
-                this.initializeChallenges();
-                console.log
+                this.initializeChallenges(); // This initializes with 6 challenges
 
                 console.log(`Game started in room ${this.id}. Mode: ${this.mode}`);
+
+                let styleRefreshTimer = 0; // Timer for style refreshing
+                const styleRefreshInterval = 10; // Refresh every 10 seconds (in seconds)
+                const targetChallengeCount = 6; // The fixed number of challenges to always have
 
                 this.gameInterval = setInterval(() => {
                     if (this.isGameFinished()) {
@@ -262,9 +265,19 @@ let proversCollection; // To hold the reference to the provers collection
                         io.emit('rooms-updated');
                         console.log(`Room ${this.id} game ended and cleaned up.`);
                     } else {
+                        // Increment style refresh timer
+                        styleRefreshTimer++;
+
+                        // Check if it's time for a full refresh
+                        if (styleRefreshTimer % styleRefreshInterval === 0) {
+                            // Perform a full refresh: replace all active challenges
+                            this.activeChallenges = generateServerRandomStyles(targetChallengeCount);
+                            console.log(`Full refresh of challenges in room ${this.id}. Generated ${targetChallengeCount} new styles.`);
+                            styleRefreshTimer = 0; // Reset refresh timer
+                        }
                         this.broadcastGameState();
                     }
-                }, 1000);
+                }, 1000); // Interval runs every 1 second
                 return true;
             }
 
@@ -299,13 +312,13 @@ let proversCollection; // To hold the reference to the provers collection
                     prover.correctProofs += 1;
                     prover.lastProofTime = Date.now();
 
-                    const newStyle = generateServerRandomStyles(1)[0];
-                    if (newStyle) {
-                        this.activeChallenges.push(newStyle);
-                        console.log(`Generated new challenge for room ${this.id}: ${newStyle.name}`);
-                    } else {
-                        console.warn(`Server: Could not generate a new style for room ${this.id}.`);
-                    }
+                   // const newStyle = generateServerRandomStyles(1)[0];
+                   // if (newStyle) {
+                   //     this.activeChallenges.push(newStyle);
+                  //      console.log(`Generated new challenge for room ${this.id}: ${newStyle.name}`);
+                  //  } else {
+                  //      console.warn(`Server: Could not generate a new style for room ${this.id}.`);
+                  //  }
 
                     return {
                         isCorrect: true,

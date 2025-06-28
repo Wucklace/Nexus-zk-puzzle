@@ -576,16 +576,8 @@ function toggleCell(nodeElement, index, mode) {
             // For multiplayer modes, attempt to submit proof to server
             // The server will validate and send back game-state-update / proof-submitted events
             if (socket && socket.connected && currentRoomId) {
-                // Client-side check for a match *before* sending to server to reduce unnecessary network traffic
-                let clientProved = false;
-                for (const style of styleShapes) { // Check against base styleShapes for client-side validation
-                    if (checkPattern(selectedNodeIndices, style.pattern, gridSize)) {
-                        clientProved = true;
-                        break;
-                    }
-                }
-
-                if (clientProved) {
+            
+               
                     // This will trigger the server-side validation and scoring
                     console.log(`[${mode}] Emitting submit-proof to server:`, selectedNodeIndices);
                     socket.emit('submit-proof', { roomId: currentRoomId, selectedNodes: selectedNodeIndices });
@@ -603,29 +595,7 @@ function toggleCell(nodeElement, index, mode) {
                         multiActiveCountSpan.innerText = 0;
                     }
 
-                } else {
-                    showMessageBox('No matching pattern found with current selection. Try again.', 'info', 2000);
-                    // Provide temporary visual feedback for client-side failure (then clear)
-                    const currentGrid = (mode === 'vs-prover-own') ? vsYourGridDiv : multiGridDiv;
-                    const activeNodeElements = selectedNodeIndices.map(idx => currentGrid.querySelector(`.node[data-index="${idx}"]`));
-                    if (activeNodeElements.length > 0) {
-                        activeNodeElements.forEach(node => {
-                            if (node) node.classList.add('proof-fail');
-                        });
-                        setTimeout(() => {
-                            activeNodeElements.forEach(node => {
-                                if (node) node.classList.remove('active', 'proof-fail');
-                            });
-                            activeCells.clear(); // Clear local selection after feedback
-                            // Reset active count display in current mode
-                            if (mode === 'vs-prover-own' && vsYourActiveCountSpan) {
-                                vsYourActiveCountSpan.innerText = 0;
-                            } else if (mode === 'multiprover' && multiActiveCountSpan) {
-                                multiActiveCountSpan.innerText = 0;
-                            }
-                        }, 200);
-                    }
-                }
+               
             } else {
                 console.warn(`[${mode}] Not connected to socket or no room ID. Cannot submit proof.`);
                 showMessageBox('Not connected to game. Cannot submit proof.', 'error', 3000);
@@ -1353,6 +1323,10 @@ function handleGameStateUpdate(data) {
         return; // Only process if game is active
     }
 
+    // IMPORTANT: Clear provedStyleIds on every game state update
+    // because the server is now doing a full refresh of active challenges.
+     provedStyleIds.clear();
+
     if (currentGameMode === 'vs') {
         if (document.getElementById('vs-timer')) document.getElementById('vs-timer').textContent = data.timeRemaining;
         if (data.leaderboard) updateVsScoreboard(data.leaderboard);
@@ -1372,6 +1346,9 @@ function handleProofSubmitted(data) {
     // Add the proved style ID to the set if correct
     if (data.isCorrect && data.provedStyleId) {
         provedStyleIds.add(data.provedStyleId);
+        // Rebuild the style preview to show the proved style as faded/marked
+        const previewContainer = (currentGameMode === 'vs') ? vsActiveStylesPreviewDiv : multiStylesPreviewDiv;
+         buildStylePreview(previewContainer, data.activeChallenges, provedStyleIds); 
     }
 
     // Apply visual feedback (fast flash) only to the cells that were part of the proof
